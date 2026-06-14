@@ -13,3 +13,6 @@ dark mode secondary text color : #C5C7C8
 
 dark mode card bg : #2E3132
 light mode card bg : #FFFFFF
+
+
+

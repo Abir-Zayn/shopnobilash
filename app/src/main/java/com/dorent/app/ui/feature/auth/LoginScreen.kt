@@ -1,6 +1,7 @@
 package com.dorent.app.ui.feature.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +18,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dorent.app.ui.components.AppText
@@ -27,13 +28,34 @@ import com.dorent.app.ui.theme.Primary
 import com.dorent.app.ui.theme.appColors
 
 @Composable
-fun LoginScreen(onNavigateToHome: () -> Unit) {
+fun LoginScreen(onNavigateToHome: () -> Unit, onNavigateToRegister: () -> Unit) {
     val colors = MaterialTheme.appColors
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.bg),
+            .background(colors.bg)
+            .pointerInput(Unit) {
+                val edgeZonePx = 48.dp.toPx()
+                val thresholdPx = 60.dp.toPx()
+                var dragTotal = 0f
+                var edgeSwipe = false
+                detectHorizontalDragGestures(
+                    onDragStart  = { offset ->
+                        dragTotal = 0f
+                        edgeSwipe = offset.x > size.width - edgeZonePx
+                    },
+                    onDragCancel = { dragTotal = 0f; edgeSwipe = false },
+                    onDragEnd    = {
+                        if (edgeSwipe && kotlin.math.abs(dragTotal) > thresholdPx) onNavigateToRegister()
+                        dragTotal = 0f; edgeSwipe = false
+                    },
+                    onHorizontalDrag = { change, amount ->
+                        change.consume()
+                        dragTotal += amount
+                    },
+                )
+            },
     ) {
         Column(
             modifier = Modifier
@@ -60,7 +82,7 @@ fun LoginScreen(onNavigateToHome: () -> Unit) {
                         text = "Don't have an account? ",
                         style = MaterialTheme.typography.bodyMedium.copy(color = colors.muted),
                     )
-                    TextButton(onClick = onNavigateToHome) {
+                    TextButton(onClick = onNavigateToRegister) {
                         AppText(
                             text = "Sign up",
                             style = MaterialTheme.typography.bodyMedium.copy(
