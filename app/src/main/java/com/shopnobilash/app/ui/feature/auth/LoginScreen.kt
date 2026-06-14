@@ -1,5 +1,8 @@
-﻿package com.shopnobilash.app.ui.feature.auth
+package com.shopnobilash.app.ui.feature.auth
 
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.shopnobilash.app.ui.components.AppSnackbarHost
@@ -42,6 +46,9 @@ fun LoginScreen(onNavigateToHome: () -> Unit, onNavigateToRegister: () -> Unit) 
     val viewModel: AuthViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val colors = MaterialTheme.appColors
+
+    val context = LocalContext.current
+    val activity = remember(context) { context.findActivity() }
 
     var snackbar by remember { mutableStateOf<SnackbarMessage?>(null) }
 
@@ -101,6 +108,9 @@ fun LoginScreen(onNavigateToHome: () -> Unit, onNavigateToRegister: () -> Unit) 
                 LoginFormSection(
                     isLoading = uiState is AuthUiState.Loading,
                     onSignIn = { email, password -> viewModel.login(email, password) },
+                    onGoogleSignIn = {
+                        activity?.let { viewModel.loginWithGoogle(it) }
+                    },
                 )
 
                 Spacer(Modifier.height(36.dp))
@@ -135,4 +145,10 @@ fun LoginScreen(onNavigateToHome: () -> Unit, onNavigateToRegister: () -> Unit) 
             modifier  = Modifier.align(Alignment.BottomCenter),
         )
     }
+}
+
+private tailrec fun Context.findActivity(): ComponentActivity? {
+    if (this is ComponentActivity) return this
+    if (this is ContextWrapper) return baseContext.findActivity()
+    return null
 }

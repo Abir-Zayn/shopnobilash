@@ -1,8 +1,10 @@
 package com.shopnobilash.app.ui.feature.auth
 
+import androidx.activity.ComponentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.appwrite.ID
+import io.appwrite.enums.OAuthProvider
 import io.appwrite.exceptions.AppwriteException
 import io.appwrite.services.Account
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,6 +76,24 @@ class AuthViewModel(private val account: Account) : ViewModel() {
                 _uiState.value = AuthUiState.LoginSuccess
             } catch (e: AppwriteException) {
                 _uiState.value = AuthUiState.Error(e.message ?: "Invalid email or password. Try again.")
+            }
+        }
+    }
+
+    fun loginWithGoogle(activity: ComponentActivity) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            try {
+                // Clear any leftover session
+                try { account.deleteSession(sessionId = "current") } catch (_: Exception) {}
+
+                account.createOAuth2Session(
+                    activity = activity,
+                    provider = OAuthProvider.GOOGLE
+                )
+                _uiState.value = AuthUiState.LoginSuccess
+            } catch (e: AppwriteException) {
+                _uiState.value = AuthUiState.Error(e.message ?: "Google Sign In failed. Try again.")
             }
         }
     }

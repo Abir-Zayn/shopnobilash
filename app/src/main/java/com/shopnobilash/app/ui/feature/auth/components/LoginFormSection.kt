@@ -1,4 +1,4 @@
-﻿package com.shopnobilash.app.ui.feature.auth.components
+package com.shopnobilash.app.ui.feature.auth.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -47,6 +47,7 @@ import com.shopnobilash.app.ui.theme.appColors
 fun LoginFormSection(
     isLoading: Boolean = false,
     onSignIn: (email: String, password: String) -> Unit,
+    onGoogleSignIn: () -> Unit,
 ) {
     val colors = MaterialTheme.appColors
     var email by remember { mutableStateOf("") }
@@ -144,11 +145,11 @@ fun LoginFormSection(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         listOf(
-            "file:///android_asset/img/google.png",
-            "file:///android_asset/img/facebook.png",
-        ).forEachIndexed { index, imagePath ->
+            "file:///android_asset/img/google.png" to onGoogleSignIn,
+            "file:///android_asset/img/facebook.png" to {},
+        ).forEachIndexed { index, (imagePath, onClickAction) ->
             Button(
-                onClick = {},
+                onClick = onClickAction,
                 modifier = Modifier.size(56.dp),
                 shape = androidx.compose.foundation.shape.CircleShape,
                 colors = ButtonDefaults.buttonColors(
