@@ -44,7 +44,10 @@ import com.shopnobilash.app.ui.theme.Primary
 import com.shopnobilash.app.ui.theme.appColors
 
 @Composable
-fun LoginFormSection(onSignIn: () -> Unit) {
+fun LoginFormSection(
+    isLoading: Boolean = false,
+    onSignIn: (email: String, password: String) -> Unit,
+) {
     val colors = MaterialTheme.appColors
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -115,7 +118,11 @@ fun LoginFormSection(onSignIn: () -> Unit) {
     }
     Spacer(Modifier.height(22.dp))
 
-    PrimaryButton(text = "Sign In", onClick = onSignIn)
+    PrimaryButton(
+        text = "Sign In",
+        isLoading = isLoading,
+        onClick = { onSignIn(email, password) },
+    )
     Spacer(Modifier.height(22.dp))
 
     // Divider
@@ -141,7 +148,7 @@ fun LoginFormSection(onSignIn: () -> Unit) {
             "file:///android_asset/img/facebook.png",
         ).forEachIndexed { index, imagePath ->
             Button(
-                onClick = onSignIn,
+                onClick = {},
                 modifier = Modifier.size(56.dp),
                 shape = androidx.compose.foundation.shape.CircleShape,
                 colors = ButtonDefaults.buttonColors(

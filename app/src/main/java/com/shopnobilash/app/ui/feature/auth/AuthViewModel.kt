@@ -16,6 +16,7 @@ sealed class AuthUiState {
     data class OtpSent(val userId: String, val email: String) : AuthUiState()  // navigate to verify screen
     object OtpResent : AuthUiState()      // resend success → toast only
     object EmailVerified : AuthUiState()  // OTP correct → navigate to Home
+    object LoginSuccess : AuthUiState()   // email/password sign-in ok → navigate to Home
     data class Error(val message: String) : AuthUiState()
 }
 
@@ -54,6 +55,25 @@ class AuthViewModel(private val account: Account) : ViewModel() {
                 _uiState.value = AuthUiState.OtpSent(user.id, email.trim())
             } catch (e: AppwriteException) {
                 _uiState.value = AuthUiState.Error(e.message ?: "Sign up failed. Try again.")
+            }
+        }
+    }
+
+    fun login(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) {
+            _uiState.value = AuthUiState.Error("Email and password are required")
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            try {
+                // Clear any leftover session — createEmailPasswordSession requires no active session
+                try { account.deleteSession(sessionId = "current") } catch (_: Exception) {}
+
+                account.createEmailPasswordSession(email = email.trim(), password = password)
+                _uiState.value = AuthUiState.LoginSuccess
+            } catch (e: AppwriteException) {
+                _uiState.value = AuthUiState.Error(e.message ?: "Invalid email or password. Try again.")
             }
         }
     }
