@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DORent"
+rootProject.name = "Shopnobilash"
 include(":app")

@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.dorent.app"
-    compileSdk = 35
+    namespace = "com.shopnobilash.app"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.dorent.app"
+        applicationId = "com.shopnobilash.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -55,6 +55,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.coil.compose)
     implementation(libs.ui.text.google.fonts)
+    implementation(libs.appwrite)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
