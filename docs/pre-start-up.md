@@ -1,2 +1,15 @@
-We will be building an app for Renting home . Finding home in places like city area like Chittagong , Bangladesh can be difficult as user have to go in places to see the To-let and then call the property owner to get more details and he continously have to ask again and again for more details. Lets say the user gets one holiday , he wants to rent a home in Chittagong and he wants to rent a home for 1 year or 2 . He goes in his hunt for finding a new home but he waste 3 hours of his holiday and havent found a new home yet then he has to wait another week to get a new holiday and then he has to go in his hunt again. This is a repetitive process. What Shopnobilash does is ?
-User can live with his family , bachelors or he wants property for his business , coaching and others. He will open the application search for the property he wants and then he will get the details of the property and he can have multiple options to book the property, He can do this on his own . 
+The colors platte want correct at all . Right now in the application we cant really differentiate the color difference of the day and dark mode theme . I would like to follow this pattern for the Day and Dark mode in our
+#00A74B , primary color,
+#006E2F, secondary color
+
+#000000, dark bg, 
+#F0F1F2, light bg
+
+light mode text color : #151617
+light mode secondary text color : #4D4D4D
+
+dark mode text color : #FFFFFF
+dark mode secondary text color : #C5C7C8
+
+dark mode card bg : #2E3132
+light mode card bg : #FFFFFF

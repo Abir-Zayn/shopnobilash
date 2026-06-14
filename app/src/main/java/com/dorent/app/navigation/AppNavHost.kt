@@ -14,7 +14,7 @@ import com.dorent.app.ui.feature.detail.DetailScreen
 import com.dorent.app.ui.feature.home.HomeScreen
 import com.dorent.app.ui.feature.listing.NewlyAddedScreen
 import com.dorent.app.ui.feature.notifications.NotificationsScreen
-import com.dorent.app.ui.feature.onboarding.LoginScreen
+import com.dorent.app.ui.feature.auth.LoginScreen
 import com.dorent.app.ui.feature.onboarding.SplashScreen
 import com.dorent.app.ui.feature.profile.ProfileScreen
 import com.dorent.app.ui.feature.wishlist.WishlistScreen
