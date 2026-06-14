@@ -49,5 +49,25 @@ render.experimental.xml
 # Gradle cache
 .gradle/
 
+# Kotlin build cache
+.kotlin/
+
 # Mac hidden file
 .DS_Store
+**/.DS_Store
+
+# Windows thumbnail cache
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Heap dumps
+*.hprof
+
+# Temp files
+*.tmp
+*.temp
+
+# Claude
+.claude/
+claude-android-skill/

@@ -1,0 +1,2 @@
+- [x] Create an asset folder for splash screen images. (Created at `app/src/main/assets/` and configured `SplashScreen.kt` to load `file:///android_asset/app_bg.jpg` with a fallback URL.)
+- [x] Add the splash screen images. (Added `app_bg.jpg` and updated loading logic.)

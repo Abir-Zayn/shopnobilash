@@ -3,6 +3,7 @@ package com.dorent.app.ui.feature.onboarding
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -57,10 +59,25 @@ fun SplashScreen(onNavigateToLogin: () -> Unit) {
     var slideIndex by remember { mutableStateOf(0) }
     val slide = SLIDES[slideIndex]
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .pointerInput(slideIndex) {
+            var totalDrag = 0f
+            detectHorizontalDragGestures(
+                onDragEnd = {
+                    when {
+                        totalDrag < -50f -> if (slideIndex < SLIDES.lastIndex) slideIndex++ else onNavigateToLogin()
+                        totalDrag > 50f -> if (slideIndex > 0) slideIndex--
+                    }
+                    totalDrag = 0f
+                },
+                onHorizontalDrag = { _, delta -> totalDrag += delta },
+            )
+        }
+    ) {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data("https://picsum.photos/seed/dorent-hero/450/900")
+                .data("file:///android_asset/img/app_bg.jpg")
                 .crossfade(true)
                 .build(),
             contentDescription = null,

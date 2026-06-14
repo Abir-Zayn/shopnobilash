@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -13,12 +12,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -69,58 +62,6 @@ fun PriceText(price: Int, period: String, size: Dp = 17.dp) {
             }
         },
     )
-}
-
-@Composable
-fun PrimaryButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null,
-) {
-    val colors = MaterialTheme.appColors
-    Button(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = colors.accent),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-    ) {
-        if (icon != null) {
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
-        }
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium.copy(color = Color.White, fontWeight = FontWeight.Bold),
-        )
-    }
-}
-
-@Composable
-fun RoundIconButton(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null,
-    active: Boolean = false,
-    bgColor: Color = MaterialTheme.colorScheme.surface,
-    iconColor: Color = MaterialTheme.appColors.ink2,
-    size: Dp = 42.dp,
-) {
-    val colors = MaterialTheme.appColors
-    FilledIconButton(
-        onClick = onClick,
-        modifier = modifier.size(size),
-        shape = RoundedCornerShape(13.dp),
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = if (active) colors.accent else bgColor,
-            contentColor = if (active) Color.White else iconColor,
-        ),
-    ) {
-        Icon(imageVector = icon, contentDescription = contentDescription, modifier = Modifier.size(20.dp))
-    }
 }
 
 @Composable
@@ -179,31 +120,6 @@ fun InitialsAvatar(name: String, size: Dp = 48.dp) {
                 fontWeight = FontWeight.Bold,
                 fontSize = (size.value * 0.38f).sp,
             ),
-        )
-    }
-}
-
-@Composable
-fun SaveToggleButton(
-    saved: Boolean,
-    onClick: () -> Unit,
-    icon: ImageVector,
-    iconFilled: ImageVector,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.appColors
-    IconButton(
-        onClick = onClick,
-        modifier = modifier
-            .size(34.dp)
-            .clip(RoundedCornerShape(11.dp))
-            .background(if (saved) colors.accent else Color.White.copy(alpha = 0.92f)),
-    ) {
-        Icon(
-            imageVector = if (saved) iconFilled else icon,
-            contentDescription = if (saved) "Remove from saved" else "Save",
-            tint = if (saved) Color.White else colors.ink,
-            modifier = Modifier.size(18.dp),
         )
     }
 }
