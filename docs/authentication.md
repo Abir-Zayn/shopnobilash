@@ -1,118 +1,245 @@
 # Authentication
 
-Auth backed by **Appwrite** (Account API). Current scope: email/password registration + email verification via 6-digit OTP, email/password login, and Google OAuth2 sign-in.
+Auth backed by **Appwrite** (Account API). Scope: email/password registration + email OTP verification, email/password login, Google OAuth2, Facebook OAuth2, session-based auto-login, profile setup gate, and logout.
 
 ## Stack
 
 - **Backend:** Appwrite Cloud — endpoint `https://sgp.cloud.appwrite.io/v1`, project `shopnobilash` (`6a2bbc29001d7e1307a8`).
-- **SDK:** `io.appwrite` Android SDK (`Account` service).
-- **DI:** Koin. `appwriteModule` provides singleton `Client` + `Account`. See `di/AppwriteModule.kt`.
-- **UI:** Jetpack Compose. State held in `AuthViewModel`, exposed as `StateFlow<AuthUiState>`.
+- **SDK:** `io.appwrite` Android SDK (`Account`, `Databases` services).
+- **DI:** Koin. `appwriteModule` provides singleton `Client`, `Account`, `Databases`. See `di/AppwriteModule.kt`.
+- **UI:** Jetpack Compose. Auth state in `AuthViewModel` exposed as `StateFlow<AuthUiState>`.
 
-## Flow
+---
+
+## Full Flow
 
 ```
-SignupScreen → (signUp) → OTP email sent → VerifyEmailScreen → (verifyOtp) → Home
+App Launch
+    │
+    ▼
+SplashScreen → checkSession()
+    ├── SessionValid (session + profile exists) ──────────────────────► Home
+    ├── SessionValidNoProfile (session, no profile) ──────────────────► ProfileSetup ──► Home
+    └── SessionInvalid (no session) → Onboarding Carousel → Login/Register
+                                                                │
+                                               ┌───────────────┴───────────────┐
+                                          Register                           Login / Google OAuth
+                                               │                                │
+                                        OTP → VerifyEmail              LoginSuccess
+                                               │                                │
+                                               └───────────────┬───────────────┘
+                                                               ▼
+                                                         ProfileSetup
+                                                      (checks if profile exists)
+                                                    ├── Profile exists → Home
+                                                    └── No profile → Show form → Save → Home
 ```
 
-1. User fills name, email, password, confirm password on `SignupScreen`.
-2. `AuthViewModel.signUp()` validates input, creates the Appwrite user, then sends a 6-digit email OTP (`createEmailToken`).
-3. On success → `OtpSent(userId, email)` → navigate to `VerifyEmailScreen`.
-4. User enters the code. `verifyOtp()` calls `createSession(userId, secret = code)` — this both **creates a session** and **marks the email verified**.
-5. On success → `EmailVerified` → navigate to Home.
+---
 
-## State machine — `AuthUiState`
+## State Machine — `AuthUiState`
 
 | State | Meaning | UI reaction |
 |-------|---------|-------------|
 | `Idle` | initial / cleared | — |
-| `Loading` | request in flight | spinners on buttons |
-| `OtpSent(userId, email)` | signup ok, OTP sent | navigate to Verify screen |
+| `Loading` | request in flight | spinner on button |
+| `SessionChecking` | `account.get()` + profile lookup in flight | branded loading screen |
+| `SessionValid` | session active + profile exists | navigate to Home |
+| `SessionValidNoProfile` | session active, profile missing | navigate to ProfileSetup |
+| `SessionInvalid` | no active session | show onboarding carousel |
+| `OtpSent(userId, email)` | signup ok, OTP sent | navigate to VerifyEmail |
 | `OtpResent` | resend succeeded | success toast only |
-| `EmailVerified` | OTP correct, session created | navigate to Home |
-| `LoginSuccess` | email/password or Google sign-in ok | snackbar + navigate to Home |
+| `EmailVerified` | OTP correct, session created | navigate to ProfileSetup |
+| `LoginSuccess` | email/password or OAuth ok | navigate to ProfileSetup |
+| `LoggedOut` | session deleted | navigate to Login |
 | `Error(message)` | any failure | error snackbar |
 
-## Registration (email + password)
+---
+
+## Auto-Login (Session Persistence)
+
+Appwrite sessions last **1 year** by default. The SDK stores the session cookie on-device automatically — no manual token management needed.
+
+On every app launch, `SplashScreen` calls `viewModel.checkSession()`:
+
+```kotlin
+fun checkSession() = viewModelScope.launch {
+    _uiState.value = AuthUiState.SessionChecking
+    try {
+        val user = account.get()
+        val hasProfile = profileRepo.getProfile(user.id).getOrNull() != null
+        _uiState.value = if (hasProfile) AuthUiState.SessionValid
+                         else AuthUiState.SessionValidNoProfile
+    } catch (_: AppwriteException) {
+        _uiState.value = AuthUiState.SessionInvalid
+    }
+}
+```
+
+- `SessionValid` → straight to Home (no UI flicker)
+- `SessionValidNoProfile` → ProfileSetup (completes onboarding)
+- `SessionInvalid` → shows onboarding carousel
+
+---
+
+## Registration (Email + Password)
 
 `AuthViewModel.signUp(name, email, password, confirmPassword)`:
 
-- Client validation:
-  - all fields required
-  - `password == confirmPassword`
-  - password length ≥ 8
-- Deletes any leftover `current` session first (Email OTP requires no active session).
+- Validation: all fields required, `password == confirmPassword`, length ≥ 8.
+- Deletes any leftover `current` session first (OTP flow requires none).
 - `account.create(userId = ID.unique(), email, password, name)`.
-- `account.createEmailToken(userId, email)` → sends OTP.
+- `account.createEmailToken(userId, email)` → sends 6-digit OTP.
+- On success → `OtpSent` → navigate to `VerifyEmailScreen`.
 
-## Login (email + password)
+---
+
+## Login (Email + Password)
 
 `AuthViewModel.login(email, password)`:
 
-- Client validation: email + password both required.
-- Deletes any leftover `current` session first (`createEmailPasswordSession` requires no active session).
-- `account.createEmailPasswordSession(email, password)` → starts session.
-- On success → `LoginSuccess` → navigate to Home.
-- `LoginScreen` injects `AuthViewModel` via Koin, drives `LoginFormSection(isLoading, onSignIn)`, shows error snackbar.
-
-## Google sign-in (OAuth2)
-
-`AuthViewModel.loginWithGoogle(activity)`:
-
-- Requires a `ComponentActivity` — `LoginScreen` resolves it from `LocalContext` via `Context.findActivity()` (tailrec unwrap of `ContextWrapper`).
+- Validation: both fields required.
 - Deletes any leftover `current` session first.
-- `account.createOAuth2Session(activity, provider = OAuthProvider.GOOGLE)` — opens the browser/custom tab for the Google consent flow.
-- On success → `LoginSuccess` → snackbar + navigate to Home.
-- Triggered from the Google circular button in `LoginFormSection` (`onGoogleSignIn`).
-- `loginWithFacebook(activity)` exists (`OAuthProvider.FACEBOOK`) but the Facebook button is not yet wired (`onClick = {}`).
+- `account.createEmailPasswordSession(email, password)`.
+- On success → `LoginSuccess` → navigate to `ProfileSetup`.
 
-> **Setup required:** Google provider must be enabled in the Appwrite console (OAuth2 settings) with valid client ID/secret + redirect, else the flow fails.
+---
 
-## Email verification (OTP)
+## Google / Facebook OAuth2
 
-`VerifyEmailScreen` + `AuthViewModel`:
+`AuthViewModel.loginWithGoogle(activity)` / `loginWithFacebook(activity)`:
 
-- `verifyOtp(userId, code)` → `account.createSession(userId, secret = code)`. Completing the email token verifies the email and starts the session.
-- `resendOtp(userId, email)` → `account.createEmailToken(userId, email)` again → `OtpResent`.
-- Code input constrained to 6 digits, numeric only. Verify button enabled only at length 6.
-- "Skip for now" navigates straight to Home (verification not yet enforced as a gate).
+- Requires a `ComponentActivity` — resolved from `LocalContext` in `LoginScreen`.
+- Deletes any leftover session first.
+- `account.createOAuth2Session(activity, provider)` — opens browser consent flow.
+- On success → `LoginSuccess` → navigate to `ProfileSetup`.
+- Facebook button exists in VM but is not yet wired in UI (`onClick = {}`).
 
-## Navigation
+> **Setup required:** Google/Facebook providers must be enabled in Appwrite console with valid client ID/secret + redirect URI.
 
-`Screen.kt` routes:
+---
 
-- `Login` = `login`
-- `Register` = `register`
-- `VerifyEmail` = `verify_email/{userId}?email={email}` — `createRoute(userId, email)` URL-encodes email.
+## Email OTP Verification
+
+`AuthViewModel.verifyOtp(userId, code)`:
+
+- `account.createSession(userId, secret = code)` — creates session + marks email verified.
+- On success → `EmailVerified` → navigate to `ProfileSetup`.
+
+`AuthViewModel.resendOtp(userId, email)`:
+
+- `account.createEmailToken(userId, email)` again → `OtpResent`.
+
+---
+
+## Profile Setup Gate
+
+After any successful auth event (`LoginSuccess` or `EmailVerified`), nav goes to `ProfileSetup`.
+
+`ProfileSetupViewModel` checks on init:
+1. `account.get()` → gets `userId` and `email`.
+2. `profileRepo.getProfile(userId)` → if profile exists → emit `ProfileExists` → auto-forward to Home.
+3. If no profile → emit `ShowForm` → display form.
+
+Required fields on form:
+- Full Name, Phone Number, Gmail (pre-filled / read-only), Permanent Address
+- Emergency Contact, Emergency Contact Recipient
+- Identity Type (NID / Passport / Birth Certificate), Identity Number
+
+On save → `databases.createDocument(documentId = userId, ...)` — ID matches Auth user ID.
+
+---
+
+## Logout
+
+`ProfileViewModel.logout()`:
+
+```kotlin
+fun logout() = viewModelScope.launch {
+    runCatching { account.deleteSession("current") }
+    _loggedOut.value = true
+}
+```
+
+- `AppNavHost` observes `loggedOut` state → navigates to `Login`, clears entire back stack.
+- Session is deleted server-side; subsequent `account.get()` calls return 401.
+
+---
+
+## Navigation Routes
+
+| Screen | Route | Trigger |
+|--------|-------|---------|
+| `Splash` | `splash` | start destination |
+| `Login` | `login` | SessionInvalid / logout |
+| `Register` | `register` | "Sign up" tap |
+| `VerifyEmail` | `verify_email/{userId}?email={email}` | after signup OTP sent |
+| `ProfileSetup` | `profile_setup` | LoginSuccess / EmailVerified / SessionValidNoProfile |
+| `Home` | `home` | SessionValid / profile saved / profile exists |
+
+---
 
 ## Files
 
 | File | Role |
 |------|------|
-| `ui/feature/auth/AuthViewModel.kt` | auth state + Appwrite calls |
-| `ui/feature/auth/SignupScreen.kt` | registration UI, edge-swipe back to sign in |
+| `ui/feature/auth/AuthViewModel.kt` | auth state + session check + logout |
+| `ui/feature/auth/SignupScreen.kt` | registration UI |
 | `ui/feature/auth/VerifyEmailScreen.kt` | OTP entry + resend |
-| `ui/feature/auth/LoginScreen.kt` | login UI + email/password + Google sign-in; resolves `ComponentActivity` for OAuth |
-| `ui/feature/auth/components/` | Signup/Login form + hero sections (`LoginFormSection` exposes `onGoogleSignIn`) |
-| `di/AppwriteModule.kt` | Koin Client + Account singletons |
-| `constants/AppwriteConfig.kt` | endpoint, project id |
+| `ui/feature/auth/LoginScreen.kt` | login UI + Google OAuth |
+| `ui/feature/onboarding/SplashScreen.kt` | session check gate + onboarding carousel |
+| `ui/feature/profile_setup/ProfileSetupViewModel.kt` | profile existence check + save |
+| `ui/feature/profile_setup/ProfileSetupScreen.kt` | profile form UI |
+| `ui/feature/profile/ProfileViewModel.kt` | profile stats + logout |
+| `data/model/Profile.kt` | Profile data class + IdentityType enum |
+| `data/repository/ProfileRepository.kt` | interface |
+| `data/repository/ProfileRepositoryImpl.kt` | Appwrite Databases impl |
+| `di/AppwriteModule.kt` | Koin: Client, Account, Databases singletons |
+| `di/RepositoryModule.kt` | Koin: PropertyRepository, ProfileRepository |
+| `di/AppModule.kt` | Koin: all ViewModels |
+| `navigation/Screen.kt` | route definitions incl. ProfileSetup |
+| `navigation/AppNavHost.kt` | full nav graph |
+| `constants/AppwriteConfig.kt` | endpoint, project id, DB + table constants |
+
+---
 
 ## Done
 
-- [x] Email/password registration (Appwrite `account.create`)
+- [x] Email/password registration (`account.create`)
 - [x] Email verification via 6-digit OTP (`createEmailToken` + `createSession`)
 - [x] Resend OTP
 - [x] Client-side validation + error/success snackbars
-- [x] Signup ↔ Verify ↔ Home navigation
-- [x] Login (email/password) via `account.createEmailPasswordSession`
-- [x] Google OAuth2 sign-in via `account.createOAuth2Session`
-- [x] Login success/failure snackbars (reusable `AppSnackbarHost`)
+- [x] Login (email/password) via `createEmailPasswordSession`
+- [x] Google OAuth2 via `createOAuth2Session`
+- [x] Session persistence — auto-login on launch via `account.get()`
+- [x] Profile existence check on session restore
+- [x] ProfileSetup screen — form + Appwrite write with `documentId = userId`
+- [x] ProfileSetup auto-skip to Home when profile already exists
+- [x] Logout — `deleteSession("current")` + nav to Login
+- [x] Logout wired through `ProfileViewModel` → `AppNavHost` observer
 
 ## Pending
 
-- [ ] Session persistence / auto-login on launch
-- [ ] Logout
-- [ ] Password reset / forgot password
-- [ ] Enforce email verification as a gate (currently "Skip for now" bypasses)
 - [ ] Wire Facebook button to `loginWithFacebook` (VM method exists, button is no-op)
+- [ ] Enforce email verification as a gate (currently "Skip for now" bypasses it)
+- [ ] Password reset / forgot password flow
+- [ ] Profile image upload (Storage bucket)
 - [ ] Verify Google/Facebook providers enabled + configured in Appwrite console
+
+---
+
+## Changelog
+
+### 2026-06-16
+- Added `checkSession()` to `AuthViewModel` — checks `account.get()` + profile existence on launch
+- Added `SessionChecking`, `SessionValid`, `SessionValidNoProfile`, `SessionInvalid`, `LoggedOut` states to `AuthUiState`
+- Added `logout()` to `AuthViewModel` and `ProfileViewModel`; wired in `AppNavHost` via `loggedOut` StateFlow observer
+- `SplashScreen` now checks session on first composition; shows branded loading screen while checking, carousel only on `SessionInvalid`
+- Created `ProfileRepository` interface + `ProfileRepositoryImpl` (Appwrite Databases)
+- Created `ProfileSetupViewModel` — checks existing profile on init, exposes `prefillEmail` from `account.get()`
+- Created `ProfileSetupScreen` — scrollable form with section labels, read-only email, multiline address, identity type dropdown
+- Added `Databases` singleton to `appwriteModule`
+- Added `ProfileRepository` to `repositoryModule`
+- Added `ProfileSetupViewModel` to `appModule`; `ProfileViewModel` now also receives `Account` for logout
+- Added `Screen.ProfileSetup` route; updated `AppNavHost` — `LoginSuccess`/`EmailVerified` now route to `ProfileSetup` instead of `Home`
+- `ProfileSetupScreen` auto-navigates to `Home` when profile already exists (returning users skip the form)

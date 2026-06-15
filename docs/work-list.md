@@ -1,27 +1,62 @@
-Im trying to enable the Google Authentication Sign In/Sign up . 
-Google OAuth2 settings
 
-To use Google authentication in your application, first fill in this form. For more info you can visit the docs.
+In this session we will completely organize our application codebase . We are following MVVM 
+architecture . Here is the folder based MVVM layout example
 
-Disabled
+app/
+└── src/main/
+    ├── data/
+    │   ├── auth/
+    │   │   ├── model/
+    │   │   │   ├── LoginRequest.kt
+    │   │   │   └── LoginResponse.kt
+    │   │   ├── repository/
+    │   │   │   ├── AuthRepository.kt
+    │   │   │   └── AuthRepositoryImpl.kt
+    │   │   └── source/
+    │   │       ├── remote/
+    │   │       │   └── AuthApiService.kt
+    │   │       └── local/
+    │   │           └── AuthLocalDataSource.kt
+    │   │
+    │   └── profile/
+    │       ├── model/
+    │       │   └── UserProfile.kt
+    │       ├── repository/
+    │       │   ├── ProfileRepository.kt
+    │       │   └── ProfileRepositoryImpl.kt
+    │       └── source/
+    │           ├── remote/
+    │           │   └── ProfileApiService.kt
+    │           └── local/
+    │               └── ProfileLocalDataSource.kt
+    │
+    ├── domain/
+    │   ├── auth/
+    │   │   └── usecase/
+    │   │       ├── LoginUseCase.kt
+    │   │       └── LogoutUseCase.kt
+    │   └── profile/
+    │       └── usecase/
+    │           ├── GetProfileUseCase.kt
+    │           └── UpdateProfileUseCase.kt
+    │
+    └── presentation/
+        ├── auth/
+        │   ├── viewmodel/
+        │   │   └── AuthViewModel.kt
+        │   └── ui/
+        │       ├── LoginScreen.kt
+        │       └── RegisterScreen.kt
+        │
+        └── profile/
+            ├── viewmodel/
+            │   └── ProfileViewModel.kt
+            └── ui/
+                └── ProfileScreen.kt
 
-Client ID
-optional
-120000000095-92ifjb00000000000000000000g7ijfb.apps.googleusercontent.com
 
-Client Secret
-This field is write-only. Enter a new value to update it.
+3 main layers:
 
-Client Secret
-optional
-
-Client Secret
-
-
-Advanced
-Optional
-
-To complete set up, add this OAuth2 redirect URI to your Google app configuration.
-
-URI 
-https://sgp.cloud.appwrite.io/v1/account/sessions/oauth2/callback/google/6a2bbc29001d7e1307a8
+data/ — Models, repositories, remote/local data sources. Each feature owns its own slice.
+domain/ — UseCases that contain business logic. Sits between data and presentation. Pure Kotlin, no Android dependency.
+presentation/ — ViewModel + Composable UI screens per feature.

@@ -1,29 +1,35 @@
-﻿package com.shopnobilash.app.navigation
+package com.shopnobilash.app.navigation
 
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.shopnobilash.app.ui.feature.auth.LoginScreen
-import com.shopnobilash.app.ui.feature.auth.SignupScreen
-import com.shopnobilash.app.ui.feature.auth.VerifyEmailScreen
-import com.shopnobilash.app.ui.feature.chat.ChatListScreen
-import com.shopnobilash.app.ui.feature.chat.ChatThreadScreen
-import com.shopnobilash.app.ui.feature.checkout.CheckoutScreen
-import com.shopnobilash.app.ui.feature.detail.DetailScreen
-import com.shopnobilash.app.ui.feature.home.HomeScreen
-import com.shopnobilash.app.ui.feature.listing.NewlyAddedScreen
-import com.shopnobilash.app.ui.feature.notifications.NotificationsScreen
-import com.shopnobilash.app.ui.feature.onboarding.SplashScreen
-import com.shopnobilash.app.ui.feature.profile.ProfileScreen
-import com.shopnobilash.app.ui.feature.wishlist.WishlistScreen
+import com.shopnobilash.app.presentation.auth.ui.LoginScreen
+import com.shopnobilash.app.presentation.auth.ui.RegisterScreen
+import com.shopnobilash.app.presentation.auth.ui.VerifyEmailScreen
+import com.shopnobilash.app.presentation.chat.ui.ChatListScreen
+import com.shopnobilash.app.presentation.chat.ui.ChatThreadScreen
+import com.shopnobilash.app.presentation.checkout.ui.CheckoutScreen
+import com.shopnobilash.app.presentation.detail.ui.DetailScreen
+import com.shopnobilash.app.presentation.home.ui.HomeScreen
+import com.shopnobilash.app.presentation.listing.ui.NewlyAddedScreen
+import com.shopnobilash.app.presentation.notifications.ui.NotificationsScreen
+import com.shopnobilash.app.presentation.onboarding.ui.SplashScreen
+import com.shopnobilash.app.presentation.profile.ui.ProfileScreen
+import com.shopnobilash.app.presentation.profile.viewmodel.ProfileViewModel
+import com.shopnobilash.app.presentation.profile_setup.ui.ProfileSetupScreen
+import com.shopnobilash.app.presentation.wishlist.ui.WishlistScreen
+import org.koin.androidx.compose.koinViewModel
 
 private val EaseInSine  = CubicBezierEasing(0.12f, 0f, 0.39f, 0f)
 private val EaseInQuint = CubicBezierEasing(0.64f, 0f, 0.78f, 0f)
@@ -37,6 +43,16 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         composable(Screen.Splash.route) {
             SplashScreen(
                 onNavigateToLogin = { navController.navigate(Screen.Login.route) },
+                onNavigateToHome = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
+                onNavigateToProfileSetup = {
+                    navController.navigate(Screen.ProfileSetup.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                },
             )
         }
         composable(
@@ -50,8 +66,8 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         ) {
             LoginScreen(
                 onNavigateToHome = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    navController.navigate(Screen.ProfileSetup.route) {
+                        popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = {
@@ -74,7 +90,7 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 )
             },
         ) {
-            SignupScreen(
+            RegisterScreen(
                 onNavigateToVerify = { userId, email ->
                     navController.navigate(Screen.VerifyEmail.createRoute(userId, email)) {
                         popUpTo(Screen.Register.route) { inclusive = true }
@@ -98,7 +114,21 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 userId = userId,
                 email = email,
                 onNavigateToHome = {
+                    navController.navigate(Screen.ProfileSetup.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+            )
+        }
+        composable(Screen.ProfileSetup.route) {
+            ProfileSetupScreen(
+                onNavigateToHome = {
                     navController.navigate(Screen.Home.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onSessionExpired = {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
@@ -177,13 +207,20 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             )
         }
         composable(Screen.Profile.route) {
-            ProfileScreen(
-                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
-                onLogout = {
-                    navController.navigate(Screen.Splash.route) {
+            val viewModel: ProfileViewModel = koinViewModel()
+            val loggedOut by viewModel.loggedOut.collectAsStateWithLifecycle()
+
+            LaunchedEffect(loggedOut) {
+                if (loggedOut) {
+                    navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                },
+                }
+            }
+
+            ProfileScreen(
+                onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onLogout = { viewModel.logout() },
                 onNavigateToTab = { tab -> navController.navigate(tab) { popUpTo(Screen.Home.route) { inclusive = false } } },
             )
         }

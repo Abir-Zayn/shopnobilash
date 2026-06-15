@@ -1,4 +1,4 @@
-﻿package com.shopnobilash.app.navigation
+package com.shopnobilash.app.navigation
 
 import android.net.Uri
 
@@ -26,4 +26,5 @@ sealed class Screen(val route: String) {
     object ChatThread : Screen("chat_thread/{propertyId}") {
         fun createRoute(id: String) = "chat_thread/$id"
     }
+    object ProfileSetup : Screen("profile_setup")
 }

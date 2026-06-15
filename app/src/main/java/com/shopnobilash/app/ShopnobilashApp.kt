@@ -1,4 +1,4 @@
-﻿package com.shopnobilash.app
+package com.shopnobilash.app
 
 import android.app.Application
 import android.util.Log
@@ -6,6 +6,7 @@ import com.shopnobilash.app.di.appModule
 import com.shopnobilash.app.di.appwriteModule
 import com.shopnobilash.app.di.networkModule
 import com.shopnobilash.app.di.repositoryModule
+import com.shopnobilash.app.di.useCaseModule
 import io.appwrite.Client
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ class ShopnobilashApp : Application(), KoinComponent {
         startKoin {
             androidLogger()
             androidContext(this@ShopnobilashApp)
-            modules(networkModule, repositoryModule, appModule, appwriteModule)
+            modules(networkModule, repositoryModule, useCaseModule, appModule, appwriteModule)
         }
         pingAppwrite()
     }
