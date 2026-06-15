@@ -111,6 +111,7 @@ fun LoginScreen(onNavigateToHome: () -> Unit, onNavigateToRegister: () -> Unit) 
                     onGoogleSignIn = {
                         activity?.let { viewModel.loginWithGoogle(it) }
                     },
+                    onFacebookSignIn = {},
                 )
 
                 Spacer(Modifier.height(36.dp))

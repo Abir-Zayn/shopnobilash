@@ -48,6 +48,7 @@ fun LoginFormSection(
     isLoading: Boolean = false,
     onSignIn: (email: String, password: String) -> Unit,
     onGoogleSignIn: () -> Unit,
+    onFacebookSignIn: () -> Unit,
 ) {
     val colors = MaterialTheme.appColors
     var email by remember { mutableStateOf("") }
@@ -146,7 +147,7 @@ fun LoginFormSection(
     ) {
         listOf(
             "file:///android_asset/img/google.png" to onGoogleSignIn,
-            "file:///android_asset/img/facebook.png" to {},
+            "file:///android_asset/img/facebook.png" to onFacebookSignIn,
         ).forEachIndexed { index, (imagePath, onClickAction) ->
             Button(
                 onClick = onClickAction,

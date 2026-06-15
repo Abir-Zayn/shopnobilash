@@ -98,6 +98,24 @@ class AuthViewModel(private val account: Account) : ViewModel() {
         }
     }
 
+    fun loginWithFacebook(activity: ComponentActivity) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            try {
+                // Clear any leftover session
+                try { account.deleteSession(sessionId = "current") } catch (_: Exception) {}
+
+                account.createOAuth2Session(
+                    activity = activity,
+                    provider = OAuthProvider.FACEBOOK
+                )
+                _uiState.value = AuthUiState.LoginSuccess
+            } catch (e: AppwriteException) {
+                _uiState.value = AuthUiState.Error(e.message ?: "Facebook Sign In failed. Try again.")
+            }
+        }
+    }
+
     fun verifyOtp(userId: String, code: String) {
         if (code.isBlank()) {
             _uiState.value = AuthUiState.Error("Enter the code from your email")

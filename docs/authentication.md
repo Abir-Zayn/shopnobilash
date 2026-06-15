@@ -1,6 +1,6 @@
 # Authentication
 
-Auth backed by **Appwrite** (Account API). Current scope: email/password registration + email verification via 6-digit OTP.
+Auth backed by **Appwrite** (Account API). Current scope: email/password registration + email verification via 6-digit OTP, email/password login, and Google OAuth2 sign-in.
 
 ## Stack
 
@@ -30,7 +30,7 @@ SignupScreen → (signUp) → OTP email sent → VerifyEmailScreen → (verifyOt
 | `OtpSent(userId, email)` | signup ok, OTP sent | navigate to Verify screen |
 | `OtpResent` | resend succeeded | success toast only |
 | `EmailVerified` | OTP correct, session created | navigate to Home |
-| `LoginSuccess` | email/password sign-in ok | navigate to Home |
+| `LoginSuccess` | email/password or Google sign-in ok | snackbar + navigate to Home |
 | `Error(message)` | any failure | error snackbar |
 
 ## Registration (email + password)
@@ -54,6 +54,19 @@ SignupScreen → (signUp) → OTP email sent → VerifyEmailScreen → (verifyOt
 - `account.createEmailPasswordSession(email, password)` → starts session.
 - On success → `LoginSuccess` → navigate to Home.
 - `LoginScreen` injects `AuthViewModel` via Koin, drives `LoginFormSection(isLoading, onSignIn)`, shows error snackbar.
+
+## Google sign-in (OAuth2)
+
+`AuthViewModel.loginWithGoogle(activity)`:
+
+- Requires a `ComponentActivity` — `LoginScreen` resolves it from `LocalContext` via `Context.findActivity()` (tailrec unwrap of `ContextWrapper`).
+- Deletes any leftover `current` session first.
+- `account.createOAuth2Session(activity, provider = OAuthProvider.GOOGLE)` — opens the browser/custom tab for the Google consent flow.
+- On success → `LoginSuccess` → snackbar + navigate to Home.
+- Triggered from the Google circular button in `LoginFormSection` (`onGoogleSignIn`).
+- `loginWithFacebook(activity)` exists (`OAuthProvider.FACEBOOK`) but the Facebook button is not yet wired (`onClick = {}`).
+
+> **Setup required:** Google provider must be enabled in the Appwrite console (OAuth2 settings) with valid client ID/secret + redirect, else the flow fails.
 
 ## Email verification (OTP)
 
@@ -79,8 +92,8 @@ SignupScreen → (signUp) → OTP email sent → VerifyEmailScreen → (verifyOt
 | `ui/feature/auth/AuthViewModel.kt` | auth state + Appwrite calls |
 | `ui/feature/auth/SignupScreen.kt` | registration UI, edge-swipe back to sign in |
 | `ui/feature/auth/VerifyEmailScreen.kt` | OTP entry + resend |
-| `ui/feature/auth/LoginScreen.kt` | login UI + email/password sign-in |
-| `ui/feature/auth/components/` | Signup/Login form + hero sections |
+| `ui/feature/auth/LoginScreen.kt` | login UI + email/password + Google sign-in; resolves `ComponentActivity` for OAuth |
+| `ui/feature/auth/components/` | Signup/Login form + hero sections (`LoginFormSection` exposes `onGoogleSignIn`) |
 | `di/AppwriteModule.kt` | Koin Client + Account singletons |
 | `constants/AppwriteConfig.kt` | endpoint, project id |
 
@@ -92,6 +105,8 @@ SignupScreen → (signUp) → OTP email sent → VerifyEmailScreen → (verifyOt
 - [x] Client-side validation + error/success snackbars
 - [x] Signup ↔ Verify ↔ Home navigation
 - [x] Login (email/password) via `account.createEmailPasswordSession`
+- [x] Google OAuth2 sign-in via `account.createOAuth2Session`
+- [x] Login success/failure snackbars (reusable `AppSnackbarHost`)
 
 ## Pending
 
@@ -99,4 +114,5 @@ SignupScreen → (signUp) → OTP email sent → VerifyEmailScreen → (verifyOt
 - [ ] Logout
 - [ ] Password reset / forgot password
 - [ ] Enforce email verification as a gate (currently "Skip for now" bypasses)
-- [ ] OAuth providers (if planned)
+- [ ] Wire Facebook button to `loginWithFacebook` (VM method exists, button is no-op)
+- [ ] Verify Google/Facebook providers enabled + configured in Appwrite console
