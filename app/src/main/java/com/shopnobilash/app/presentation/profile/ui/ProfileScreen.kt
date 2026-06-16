@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -70,6 +71,7 @@ data class MenuItem(
 
 val MENU_ITEMS = listOf(
     MenuItem(Icons.Filled.Person,       "Personal information", Accent),
+    MenuItem(Icons.Filled.VerifiedUser, "Verify Identity",      Blue,        route = "verify_identity"),
     MenuItem(Icons.Filled.Apartment,    "My properties",        Blue,        badge = "2"),
     MenuItem(Icons.Filled.CreditCard,   "Payment methods",      Color(0xFF7C5CFC)),
     MenuItem(Icons.Filled.Notifications,"Notifications",        TagOrange,   route = "notifications"),
@@ -80,6 +82,7 @@ val MENU_ITEMS = listOf(
 @Composable
 fun ProfileScreen(
     onNavigateToNotifications: () -> Unit,
+    onNavigateToVerification: () -> Unit,
     onLogout: () -> Unit,
     onNavigateToTab: (String) -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
@@ -212,7 +215,8 @@ fun ProfileScreen(
                                 .fillMaxWidth()
                                 .clickable {
                                     when (item.route) {
-                                        "notifications" -> onNavigateToNotifications()
+                                        "notifications"   -> onNavigateToNotifications()
+                                        "verify_identity" -> onNavigateToVerification()
                                     }
                                 }
                                 .padding(horizontal = 14.dp, vertical = 13.dp),

@@ -55,6 +55,7 @@ fun NotificationsScreen(
     onBack: () -> Unit,
     onNavigateToDetail: (String) -> Unit,
     onNavigateToChatThread: (String) -> Unit,
+    onNavigateToVerification: () -> Unit,
     viewModel: NotificationsViewModel = koinViewModel(),
 ) {
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
@@ -88,12 +89,17 @@ fun NotificationsScreen(
                         modifier = Modifier.padding(start = 4.dp, top = 14.dp, bottom = 10.dp),
                     )
                 }
-                items(group.items, key = { it.propertyId + it.type + it.time }) { notif ->
+                items(group.items, key = { it.id }) { notif ->
                     NotificationRow(
                         item = notif,
                         onClick = {
-                            if (notif.type == "message") onNavigateToChatThread(notif.propertyId)
-                            else onNavigateToDetail(notif.propertyId)
+                            when (notif.actionRoute) {
+                                "verify_identity" -> onNavigateToVerification()
+                                else -> {
+                                    if (notif.type == "message") onNavigateToChatThread(notif.targetId)
+                                    else if (notif.targetId.isNotBlank()) onNavigateToDetail(notif.targetId)
+                                }
+                            }
                         },
                     )
                     Spacer(Modifier.height(10.dp))
@@ -157,5 +163,6 @@ private fun notificationIconAndTint(type: String): Pair<ImageVector, Color> = wh
     "wishlist" -> Pair(Icons.Filled.Favorite, Danger)
     "review"   -> Pair(Icons.Filled.Star, StarYellow)
     "booking"  -> Pair(Icons.Filled.Check, Accent)
+    "payment"  -> Pair(Icons.Filled.Bookmark, Accent)
     else       -> Pair(Icons.Filled.Notifications, Blue)
 }

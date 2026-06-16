@@ -27,4 +27,5 @@ sealed class Screen(val route: String) {
         fun createRoute(id: String) = "chat_thread/$id"
     }
     object ProfileSetup : Screen("profile_setup")
+    object VerifyIdentity : Screen("verify_identity")
 }

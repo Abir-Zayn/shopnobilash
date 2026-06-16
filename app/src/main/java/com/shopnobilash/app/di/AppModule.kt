@@ -8,8 +8,11 @@ import com.shopnobilash.app.domain.auth.usecase.LogoutUseCase
 import com.shopnobilash.app.domain.auth.usecase.ResendOtpUseCase
 import com.shopnobilash.app.domain.auth.usecase.SignUpUseCase
 import com.shopnobilash.app.domain.auth.usecase.VerifyOtpUseCase
+import com.shopnobilash.app.domain.notification.usecase.GetNotificationsUseCase
 import com.shopnobilash.app.domain.profile.usecase.CreateProfileUseCase
 import com.shopnobilash.app.domain.profile.usecase.GetProfileUseCase
+import com.shopnobilash.app.domain.verification.usecase.GetVerificationStatusUseCase
+import com.shopnobilash.app.domain.verification.usecase.SubmitVerificationUseCase
 import com.shopnobilash.app.domain.property.usecase.GetListingsUseCase
 import com.shopnobilash.app.domain.property.usecase.GetPropertyByIdUseCase
 import com.shopnobilash.app.domain.property.usecase.GetSavedPropertyIdsUseCase
@@ -23,6 +26,7 @@ import com.shopnobilash.app.presentation.listing.viewmodel.ListingViewModel
 import com.shopnobilash.app.presentation.notifications.viewmodel.NotificationsViewModel
 import com.shopnobilash.app.presentation.profile.viewmodel.ProfileViewModel
 import com.shopnobilash.app.presentation.profile_setup.viewmodel.ProfileSetupViewModel
+import com.shopnobilash.app.presentation.verification.viewmodel.VerificationViewModel
 import com.shopnobilash.app.presentation.wishlist.viewmodel.WishlistViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.androidx.viewmodel.dsl.viewModelOf
@@ -43,6 +47,13 @@ val useCaseModule = module {
     factory { GetProfileUseCase(get()) }
     factory { CreateProfileUseCase(get()) }
 
+    // Verification
+    factory { GetVerificationStatusUseCase(get()) }
+    factory { SubmitVerificationUseCase(get()) }
+
+    // Notifications
+    factory { GetNotificationsUseCase(get()) }
+
     // Property
     factory { GetListingsUseCase(get()) }
     factory { GetPropertyByIdUseCase(get()) }
@@ -61,4 +72,5 @@ val appModule = module {
     viewModel { (propertyId: String) -> CheckoutViewModel(propertyId, get()) }
     viewModel { (propertyId: String?) -> ChatViewModel(get(), propertyId) }
     viewModelOf(::ProfileViewModel)
+    viewModelOf(::VerificationViewModel)
 }

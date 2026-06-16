@@ -13,7 +13,6 @@ data class Profile(
     val emergencyContactRecipient: String,
     val identityType: String,
     val identityNumber: String,
-    val identityImageUrl: String? = null,
     val isVerified: Boolean = false,
 )
 

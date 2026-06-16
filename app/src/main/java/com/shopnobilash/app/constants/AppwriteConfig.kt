@@ -16,3 +16,19 @@ const val TABLE_REVIEWS = "reviews"
 const val TABLE_PROFILES = "profiles"
 const val TABLE_WISHLIST = "wishlist"
 const val TABLE_NOTIFICATIONS = "notifications"
+
+// Buckets
+const val BUCKET_USER_PROFILES     = "6a3069400025f5e48f62"
+const val BUCKET_PROPERTY_IMAGES   = "6a30695d0032d77342b7"
+const val BUCKET_VERIFICATION_DOCS = "6a30696f0026c15ea019"
+
+// Verifications collection
+const val TABLE_VERIFICATIONS = "verifications"
+
+// Verification status
+const val VERIFICATION_STATUS_PENDING  = "pending"
+const val VERIFICATION_STATUS_APPROVED = "approved"
+const val VERIFICATION_STATUS_REJECTED = "rejected"
+
+// Notification type
+const val NOTIFICATION_TYPE_SYSTEM = "System"

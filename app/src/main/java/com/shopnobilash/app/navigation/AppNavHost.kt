@@ -28,6 +28,7 @@ import com.shopnobilash.app.presentation.onboarding.ui.SplashScreen
 import com.shopnobilash.app.presentation.profile.ui.ProfileScreen
 import com.shopnobilash.app.presentation.profile.viewmodel.ProfileViewModel
 import com.shopnobilash.app.presentation.profile_setup.ui.ProfileSetupScreen
+import com.shopnobilash.app.presentation.verification.ui.VerificationScreen
 import com.shopnobilash.app.presentation.wishlist.ui.WishlistScreen
 import org.koin.androidx.compose.koinViewModel
 
@@ -204,6 +205,7 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 onBack = { navController.popBackStack() },
                 onNavigateToDetail = { id -> navController.navigate(Screen.Detail.createRoute(id)) },
                 onNavigateToChatThread = { id -> navController.navigate(Screen.ChatThread.createRoute(id)) },
+                onNavigateToVerification = { navController.navigate(Screen.VerifyIdentity.route) },
             )
         }
         composable(Screen.Profile.route) {
@@ -220,8 +222,14 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
 
             ProfileScreen(
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onNavigateToVerification = { navController.navigate(Screen.VerifyIdentity.route) },
                 onLogout = { viewModel.logout() },
                 onNavigateToTab = { tab -> navController.navigate(tab) { popUpTo(Screen.Home.route) { inclusive = false } } },
+            )
+        }
+        composable(Screen.VerifyIdentity.route) {
+            VerificationScreen(
+                onBack = { navController.popBackStack() },
             )
         }
     }

@@ -5,6 +5,7 @@ import com.shopnobilash.app.constants.APPWRITE_PUBLIC_ENDPOINT
 import io.appwrite.Client
 import io.appwrite.services.Account
 import io.appwrite.services.Databases
+import io.appwrite.services.Storage
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -16,4 +17,5 @@ val appwriteModule = module {
     }
     single { Account(get()) }
     single { Databases(get()) }
+    single { Storage(get()) }
 }

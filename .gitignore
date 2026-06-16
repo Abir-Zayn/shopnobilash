@@ -71,3 +71,12 @@ Desktop.ini
 # Claude
 .claude/
 claude-android-skill/
+
+# Docs
+docs/work-list.md
+docs/session-handoff.md
+
+# Appwrite Functions
+appwrite-functions/**/node_modules/
+appwrite-functions/**/*.tar.gz
+appwrite-functions/**/*.zip
