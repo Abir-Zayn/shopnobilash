@@ -3,6 +3,8 @@ package com.shopnobilash.app.data.profile.repository
 import com.shopnobilash.app.constants.PROPERTY_DATABASE_ID
 import com.shopnobilash.app.constants.TABLE_PROFILES
 import com.shopnobilash.app.data.profile.model.Profile
+import io.appwrite.Permission
+import io.appwrite.Role
 import io.appwrite.exceptions.AppwriteException
 import io.appwrite.services.Databases
 
@@ -27,7 +29,13 @@ class ProfileRepositoryImpl(private val databases: Databases) : ProfileRepositor
                 profile.identityImageUrl?.let { put("identity_image_url", it) }
                 profile.bloodGroup?.let { put("blood_group", it) }
                 profile.occupation?.let { put("occupation", it) }
-            }
+            },
+            // Owner can read/update/delete own profile
+            permissions = listOf(
+                Permission.read(Role.user(profile.id)),
+                Permission.update(Role.user(profile.id)),
+                Permission.delete(Role.user(profile.id)),
+            ),
         )
     }.map { }
 

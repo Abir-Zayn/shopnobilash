@@ -41,14 +41,20 @@ class StorageRepositoryImpl(private val storage: Storage) : StorageRepository {
 
     override suspend fun uploadVerificationDoc(userId: String, bytes: ByteArray, mimeType: String): Result<String> =
         runCatching {
+            val extension = when (mimeType) {
+                "image/png" -> "png"
+                "image/webp" -> "webp"
+                "image/gif" -> "gif"
+                "application/pdf" -> "pdf"
+                else -> "jpg"
+            }
             storage.createFile(
                 bucketId = BUCKET_VERIFICATION_DOCS,
                 fileId = ID.unique(),
-                file = InputFile.fromBytes(bytes, "document", mimeType),
-                // No public read — only owner and admin can access
+                file = InputFile.fromBytes(bytes, "document.$extension", mimeType),
+                // No public read — only owner can read. Admins bypass permissions via server-side/admin API keys anyway.
                 permissions = listOf(
                     Permission.read(Role.user(userId)),
-                    Permission.read(Role.label("admin")),
                 ),
             ).id
         }

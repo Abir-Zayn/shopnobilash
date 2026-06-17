@@ -1,5 +1,6 @@
 package com.shopnobilash.app.presentation.profile_setup.viewmodel
 
+import android.util.Log
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -52,24 +53,34 @@ class ProfileSetupViewModel(
     init { checkExistingProfile() }
 
     private fun checkExistingProfile() = viewModelScope.launch {
+        Log.d("ProfileSetup", "checkExistingProfile() was called.")
         checkSessionUseCase().fold(
             onSuccess = { userId ->
+                Log.d("ProfileSetup", "Session verified successfully for user: $userId")
                 currentUserId = userId
                 getCurrentUserEmailUseCase().fold(
                     onSuccess = { email ->
                         prefillEmail = email
                         getProfileUseCase(userId).fold(
                             onSuccess = { profile ->
+                                Log.d("ProfileSetup", "Profile query succeeded. Profile exists: ${profile != null}")
                                 _uiState.value = if (profile != null) ProfileSetupUiState.ProfileExists
                                                  else ProfileSetupUiState.ShowForm
                             },
-                            onFailure = { _uiState.value = ProfileSetupUiState.ShowForm }
+                            onFailure = { 
+                                Log.w("ProfileSetup", "Failed to retrieve profile: ${it.message}")
+                                _uiState.value = ProfileSetupUiState.ShowForm 
+                            }
                         )
                     },
-                    onFailure = { _uiState.value = ProfileSetupUiState.ShowForm }
+                    onFailure = { 
+                        Log.e("ProfileSetup", "Failed to get current user email")
+                        _uiState.value = ProfileSetupUiState.ShowForm 
+                    }
                 )
             },
             onFailure = {
+                Log.e("ProfileSetup", "Session check failed: ${it.message}")
                 _uiState.value = ProfileSetupUiState.Error("Session expired. Please log in again.")
             }
         )
@@ -77,6 +88,7 @@ class ProfileSetupViewModel(
 
     fun onProfilePicSelected(uri: Uri, context: Context) {
         viewModelScope.launch {
+            Log.d("ProfileSetup", "Profile picture selected: $uri")
             val bytes = context.contentResolver.openInputStream(uri)?.readBytes() ?: return@launch
             profilePicBytes = bytes
             profilePicMime = context.contentResolver.getType(uri) ?: "image/jpeg"
@@ -86,6 +98,7 @@ class ProfileSetupViewModel(
 
     fun onIdentityImageSelected(uri: Uri, context: Context) {
         viewModelScope.launch {
+            Log.d("ProfileSetup", "Identity image selected: $uri")
             val bytes = context.contentResolver.openInputStream(uri)?.readBytes() ?: return@launch
             identityImageBytes = bytes
             identityImageMime = context.contentResolver.getType(uri) ?: "image/jpeg"
@@ -102,21 +115,52 @@ class ProfileSetupViewModel(
         identityType: String,
         identityNumber: String,
     ) {
+        Log.d("ProfileSetup", "saveProfile() called with fullName=$fullName, phoneNumber=$phoneNumber, identityType=$identityType")
         if (listOf(fullName, phoneNumber, permanentAddress, emergencyContact,
                 emergencyContactRecipient, identityType, identityNumber).any { it.isBlank() }) {
+            Log.w("ProfileSetup", "Validation failed: Some required fields are blank.")
             _uiState.value = ProfileSetupUiState.Error("Please fill in all required fields")
             return
         }
+
+        val cleanPhone = phoneNumber.trim()
+        val cleanEmergency = emergencyContact.trim()
+
+        if (cleanPhone.length != 11 || !cleanPhone.all { it.isDigit() }) {
+            Log.w("ProfileSetup", "Validation failed: Phone number length (${cleanPhone.length}) must be exactly 11 digits and numeric.")
+            _uiState.value = ProfileSetupUiState.Error("Phone number must be exactly 11 digits")
+            return
+        }
+        if (cleanEmergency.length != 11 || !cleanEmergency.all { it.isDigit() }) {
+            Log.w("ProfileSetup", "Validation failed: Emergency contact number length (${cleanEmergency.length}) must be exactly 11 digits and numeric.")
+            _uiState.value = ProfileSetupUiState.Error("Emergency contact number must be exactly 11 digits")
+            return
+        }
+        if (permanentAddress.trim().length < 20) {
+            Log.w("ProfileSetup", "Validation failed: Permanent address length (${permanentAddress.trim().length}) is less than 20 characters.")
+            _uiState.value = ProfileSetupUiState.Error("Permanent address must be at least 20 characters")
+            return
+        }
+        if (emergencyContactRecipient.trim().length < 10) {
+            Log.w("ProfileSetup", "Validation failed: Emergency contact person name length (${emergencyContactRecipient.trim().length}) is less than 10 characters.")
+            _uiState.value = ProfileSetupUiState.Error("Emergency contact person name must be at least 10 characters")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = ProfileSetupUiState.Loading
+            Log.d("ProfileSetup", "Saving profile to repository...")
 
             var profilePictureUrl: String? = null
             profilePicBytes?.let { bytes ->
+                Log.d("ProfileSetup", "Uploading profile picture...")
                 storageRepository.uploadProfilePicture(currentUserId, bytes, profilePicMime).fold(
                     onSuccess = { fileId ->
                         profilePictureUrl = storageRepository.getProfilePictureUrl(fileId)
+                        Log.d("ProfileSetup", "Profile picture uploaded successfully. URL: $profilePictureUrl")
                     },
                     onFailure = {
+                        Log.e("ProfileSetup", "Profile picture upload failed", it)
                         _uiState.value = ProfileSetupUiState.Error(it.message ?: "Profile picture upload failed")
                         return@launch
                     },
@@ -125,17 +169,21 @@ class ProfileSetupViewModel(
 
             var identityImageUrl: String? = null
             identityImageBytes?.let { bytes ->
+                Log.d("ProfileSetup", "Uploading identity document...")
                 storageRepository.uploadVerificationDoc(currentUserId, bytes, identityImageMime).fold(
                     onSuccess = { fileId ->
                         identityImageUrl = storageRepository.getVerificationDocUrl(fileId)
+                        Log.d("ProfileSetup", "Identity document uploaded successfully. URL: $identityImageUrl")
                     },
                     onFailure = {
+                        Log.e("ProfileSetup", "Identity document upload failed", it)
                         _uiState.value = ProfileSetupUiState.Error(it.message ?: "Identity document upload failed")
                         return@launch
                     },
                 )
             }
 
+            Log.d("ProfileSetup", "Creating profile with CreateProfileUseCase...")
             createProfileUseCase(
                 Profile(
                     id = currentUserId,
@@ -151,11 +199,20 @@ class ProfileSetupViewModel(
                     identityImageUrl = identityImageUrl,
                 )
             ).fold(
-                onSuccess = { _uiState.value = ProfileSetupUiState.Saved },
-                onFailure = { _uiState.value = ProfileSetupUiState.Error(it.message ?: "Failed to save profile") }
+                onSuccess = {
+                    Log.i("ProfileSetup", "Profile successfully saved and created!")
+                    _uiState.value = ProfileSetupUiState.Saved
+                },
+                onFailure = {
+                    Log.e("ProfileSetup", "Failed to save profile via UseCase", it)
+                    _uiState.value = ProfileSetupUiState.Error(it.message ?: "Failed to save profile")
+                }
             )
         }
     }
 
-    fun clearError() { _uiState.value = ProfileSetupUiState.ShowForm }
+    fun clearError() { 
+        Log.d("ProfileSetup", "Clearing UI error state")
+        _uiState.value = ProfileSetupUiState.ShowForm 
+    }
 }
