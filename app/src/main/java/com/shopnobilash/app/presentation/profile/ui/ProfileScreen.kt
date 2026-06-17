@@ -76,6 +76,7 @@ data class MenuItem(
 fun ProfileScreen(
     onNavigateToNotifications: () -> Unit,
     onNavigateToVerification: () -> Unit,
+    onNavigateToOwnerDashboard: () -> Unit,
     onLogout: () -> Unit,
     onNavigateToTab: (String) -> Unit,
     viewModel: ProfileViewModel = koinViewModel(),
@@ -86,7 +87,7 @@ fun ProfileScreen(
     val menuItems = listOf(
         MenuItem(Icons.Filled.Person,       "Personal information", Accent),
         MenuItem(Icons.Filled.VerifiedUser, "Verify Identity",      Blue,        onClick = onNavigateToVerification),
-        MenuItem(Icons.Filled.House,        "Provide Rental",       Accent),
+        MenuItem(Icons.Filled.House,        "Provide Rental",       Accent,      onClick = onNavigateToOwnerDashboard),
         MenuItem(Icons.Filled.Apartment,    "My properties",        Blue,        badge = "2"),
         MenuItem(Icons.Filled.CreditCard,   "Payment methods",      Color(0xFF7C5CFC)),
         MenuItem(Icons.Filled.Notifications,"Notifications",        TagOrange,   onClick = onNavigateToNotifications),
@@ -184,6 +185,7 @@ fun ProfileScreen(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
                         .background(Ink)
+                        .clickable { onNavigateToOwnerDashboard() }
                         .padding(horizontal = 18.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),

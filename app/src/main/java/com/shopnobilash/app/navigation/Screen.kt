@@ -28,4 +28,5 @@ sealed class Screen(val route: String) {
     }
     object ProfileSetup : Screen("profile_setup")
     object VerifyIdentity : Screen("verify_identity")
+    object OwnerDashboard : Screen("owner_dashboard")
 }

@@ -4,6 +4,8 @@ import com.shopnobilash.app.data.auth.repository.AuthRepository
 import com.shopnobilash.app.data.auth.repository.AuthRepositoryImpl
 import com.shopnobilash.app.data.notification.repository.NotificationRepository
 import com.shopnobilash.app.data.notification.repository.NotificationRepositoryImpl
+import com.shopnobilash.app.data.owner.repository.OwnerRepository
+import com.shopnobilash.app.data.owner.repository.OwnerRepositoryImpl
 import com.shopnobilash.app.data.profile.repository.ProfileRepository
 import com.shopnobilash.app.data.profile.repository.ProfileRepositoryImpl
 import com.shopnobilash.app.data.property.repository.PropertyRepository
@@ -16,7 +18,8 @@ import org.koin.dsl.module
 
 val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get()) }
-    single<PropertyRepository> { PropertyRepositoryImpl() }
+    single<PropertyRepository> { PropertyRepositoryImpl(get()) }
+    single<OwnerRepository> { OwnerRepositoryImpl(get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(get()) }
     single<StorageRepository> { StorageRepositoryImpl(get()) }
     single<VerificationRepository> { VerificationRepositoryImpl(get()) }

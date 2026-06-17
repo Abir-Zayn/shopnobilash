@@ -9,10 +9,13 @@ import com.shopnobilash.app.domain.auth.usecase.ResendOtpUseCase
 import com.shopnobilash.app.domain.auth.usecase.SignUpUseCase
 import com.shopnobilash.app.domain.auth.usecase.VerifyOtpUseCase
 import com.shopnobilash.app.domain.notification.usecase.GetNotificationsUseCase
+import com.shopnobilash.app.domain.owner.usecase.CreateOwnerUseCase
+import com.shopnobilash.app.domain.owner.usecase.ResolveOwnerUseCase
 import com.shopnobilash.app.domain.profile.usecase.CreateProfileUseCase
 import com.shopnobilash.app.domain.profile.usecase.GetProfileUseCase
 import com.shopnobilash.app.domain.verification.usecase.GetVerificationStatusUseCase
 import com.shopnobilash.app.domain.verification.usecase.SubmitVerificationUseCase
+import com.shopnobilash.app.domain.property.usecase.CreatePropertyUseCase
 import com.shopnobilash.app.domain.property.usecase.GetListingsUseCase
 import com.shopnobilash.app.domain.property.usecase.GetPropertyByIdUseCase
 import com.shopnobilash.app.domain.property.usecase.GetSavedPropertyIdsUseCase
@@ -24,6 +27,7 @@ import com.shopnobilash.app.presentation.detail.viewmodel.DetailViewModel
 import com.shopnobilash.app.presentation.home.viewmodel.HomeViewModel
 import com.shopnobilash.app.presentation.listing.viewmodel.ListingViewModel
 import com.shopnobilash.app.presentation.notifications.viewmodel.NotificationsViewModel
+import com.shopnobilash.app.presentation.owner.viewmodel.OwnerDashboardViewModel
 import com.shopnobilash.app.presentation.profile.viewmodel.ProfileViewModel
 import com.shopnobilash.app.presentation.profile_setup.viewmodel.ProfileSetupViewModel
 import com.shopnobilash.app.presentation.verification.viewmodel.VerificationViewModel
@@ -59,6 +63,11 @@ val useCaseModule = module {
     factory { GetPropertyByIdUseCase(get()) }
     factory { ToggleSavePropertyUseCase(get()) }
     factory { GetSavedPropertyIdsUseCase(get()) }
+    factory { CreatePropertyUseCase(get()) }
+
+    // Owner
+    factory { ResolveOwnerUseCase(get()) }
+    factory { CreateOwnerUseCase(get()) }
 }
 
 val appModule = module {
@@ -73,4 +82,5 @@ val appModule = module {
     viewModel { (propertyId: String?) -> ChatViewModel(get(), propertyId) }
     viewModelOf(::ProfileViewModel)
     viewModelOf(::VerificationViewModel)
+    viewModelOf(::OwnerDashboardViewModel)
 }

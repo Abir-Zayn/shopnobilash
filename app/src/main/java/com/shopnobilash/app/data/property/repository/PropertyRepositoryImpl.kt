@@ -1,13 +1,22 @@
 package com.shopnobilash.app.data.property.repository
 
-import com.shopnobilash.app.data.property.model.MOCK_PROPERTIES
+import com.shopnobilash.app.constants.PROPERTY_DATABASE_ID
+import com.shopnobilash.app.constants.TABLE_PROPERTIES
+import com.shopnobilash.app.constants.TABLE_PROPERTY_OWNERS
 import com.shopnobilash.app.data.property.model.Property
-import com.shopnobilash.app.data.property.model.propertyById
+import com.shopnobilash.app.data.property.model.PropertyDraft
+import com.shopnobilash.app.data.property.model.PropertyStatus
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Query
+import io.appwrite.Role
+import io.appwrite.services.Databases
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.Instant
 
-class PropertyRepositoryImpl : PropertyRepository {
+class PropertyRepositoryImpl(private val databases: Databases) : PropertyRepository {
 
     private val _savedIds = MutableStateFlow(setOf("earth", "minimal"))
 
@@ -19,9 +28,98 @@ class PropertyRepositoryImpl : PropertyRepository {
         _savedIds.value = current
     }
 
-    override suspend fun getListings(): Result<List<Property>> =
-        Result.success(MOCK_PROPERTIES)
+    @Suppress("UNCHECKED_CAST")
+    override suspend fun getListings(): Result<List<Property>> = runCatching {
+        val docs = databases.listDocuments(
+            databaseId = PROPERTY_DATABASE_ID,
+            collectionId = TABLE_PROPERTIES,
+            queries = listOf(Query.orderDesc("ads_created_on")),
+        )
+        docs.documents.map { doc ->
+            val data = doc.data as Map<String, Any>
+            data.toProperty(doc.id)
+        }
+    }
 
-    override suspend fun getPropertyById(id: String): Result<Property> =
-        Result.success(propertyById(id))
+    @Suppress("UNCHECKED_CAST")
+    override suspend fun getPropertyById(id: String): Result<Property> = runCatching {
+        val doc = databases.getDocument(
+            databaseId = PROPERTY_DATABASE_ID,
+            collectionId = TABLE_PROPERTIES,
+            documentId = id,
+        )
+        (doc.data as Map<String, Any>).toProperty(doc.id)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun Map<String, Any>.toProperty(id: String) = Property(
+        id = id,
+        title = this["house_name"] as? String ?: "",
+        type = this["property_category"] as? String ?: "",
+        city = "",
+        address = "",
+        price = (this["rent"] as? Number)?.toInt() ?: 0,
+        period = "mo",
+        beds = (this["bed_no"] as? Number)?.toInt() ?: 0,
+        baths = (this["bath_no"] as? Number)?.toInt() ?: 0,
+        sqft = (this["area_sqft"] as? Number)?.toInt() ?: 0,
+        rating = 0.0,
+        ownerName = "",
+        ownerRole = "",
+        description = this["description"] as? String ?: "",
+        imageUrl = (this["property_img"] as? List<*>)?.firstOrNull() as? String ?: "",
+    )
+
+    override suspend fun createProperty(
+        userId: String,
+        ownerId: String,
+        draft: PropertyDraft,
+        imageUrls: List<String>,
+    ): Result<String> = runCatching {
+        val now = Instant.now().toString()
+
+        val propDoc = databases.createDocument(
+            databaseId = PROPERTY_DATABASE_ID,
+            collectionId = TABLE_PROPERTIES,
+            documentId = ID.unique(),
+            data = buildMap {
+                put("house_name", draft.houseName)
+                put("bed_no", draft.bedNo)
+                put("bath_no", draft.bathNo)
+                put("area_sqft", draft.areaSqft)
+                put("rent", draft.rent)
+                put("status", PropertyStatus.AVAILABLE)
+                put("property_category", draft.category.rawValue)
+                draft.floor?.takeIf { it.isNotBlank() }?.let { put("floor", it) }
+                draft.description?.takeIf { it.isNotBlank() }?.let { put("description", it) }
+                draft.contractTerms?.takeIf { it.isNotBlank() }?.let { put("contract_terms", it) }
+                if (imageUrls.isNotEmpty()) put("property_img", imageUrls)
+                put("ads_created_on", now)
+                put("updated_on", now)
+            },
+            permissions = listOf(
+                Permission.read(Role.any()),
+                Permission.update(Role.user(userId)),
+                Permission.delete(Role.user(userId)),
+            ),
+        )
+
+        // Junction MUST follow the property insert (FK ordering).
+        databases.createDocument(
+            databaseId = PROPERTY_DATABASE_ID,
+            collectionId = TABLE_PROPERTY_OWNERS,
+            documentId = ID.unique(),
+            data = mapOf(
+                "property_id" to propDoc.id,
+                "owner_id" to ownerId,
+            ),
+            permissions = listOf(
+                Permission.read(Role.any()),
+                Permission.update(Role.user(userId)),
+                Permission.delete(Role.user(userId)),
+            ),
+        )
+
+        propDoc.id
+    }
 }

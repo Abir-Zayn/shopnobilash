@@ -31,8 +31,11 @@ Stores property owner identity and contact information. An owner record is the
 | `address_line2` | string(255) | ❌ | — | Secondary address (apt, floor, etc.) |
 | `tin_certificate_no` | string(50) | ❌ | **UNIQUE** | Tax Identification Number |
 | `profile_picture_url` | string(2048) | ❌ | — | URL to profile image |
-| `created_at` | datetime | ❌ | — | ISO 8601 |
-| `updated_at` | datetime | ❌ | — | ISO 8601 |
+
+> No `created_at` / `updated_at` columns on this table — rely on the Appwrite
+> system fields `$createdAt` / `$updatedAt`. Do **not** send `created_at` /
+> `updated_at` in the create payload; the collection has no such attributes and
+> Appwrite rejects the write with `Invalid document structure: Unknown attribute`.
 
 ### Indexes
 

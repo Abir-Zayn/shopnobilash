@@ -196,67 +196,56 @@ fun HomeScreen(
 
             when (val state = uiState) {
                 is HomeUiState.Loading -> item {
-                    Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Accent)
-                    }
+                    HomeLoadingState()
                 }
                 is HomeUiState.Error -> item {
                     Text(state.message, modifier = Modifier.padding(18.dp), color = colors.danger)
                 }
                 is HomeUiState.Success -> {
-                    // Recommend section
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("Recommend for you", style = MaterialTheme.typography.headlineSmall.copy(color = colors.ink, fontWeight = FontWeight.Bold))
-                            Text("See all", style = MaterialTheme.typography.labelLarge.copy(color = Accent, fontWeight = FontWeight.Bold),
-                                modifier = Modifier.clickable { onNavigateToNewlyAdded() })
+                    val properties = state.properties
+                    if (properties.isEmpty()) {
+                        item { HomeEmptyState() }
+                    } else {
+                        // Recommend section
+                        item {
+                            HomeSectionHeader(
+                                title = "Recommend for you",
+                                onSeeAll = onNavigateToNewlyAdded,
+                            )
                         }
-                        Spacer(Modifier.height(14.dp))
-                    }
-                    item {
-                        val recommended = state.properties.filter { it.id in listOf("sherman", "lara", "minimal") }
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 18.dp),
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        ) {
-                            items(recommended) { prop ->
-                                PropertyCardVertical(
-                                    property = prop,
-                                    isSaved = prop.id in savedIds,
-                                    onOpen = { onNavigateToDetail(prop.id) },
-                                    onSaveToggle = { viewModel.toggleSave(prop.id) },
-                                )
+                        item {
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 18.dp),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            ) {
+                                items(properties, key = { it.id }) { prop ->
+                                    PropertyCardVertical(
+                                        property = prop,
+                                        isSaved = prop.id in savedIds,
+                                        onOpen = { onNavigateToDetail(prop.id) },
+                                        onSaveToggle = { viewModel.toggleSave(prop.id) },
+                                    )
+                                }
                             }
+                            Spacer(Modifier.height(24.dp))
                         }
-                        Spacer(Modifier.height(24.dp))
-                    }
 
-                    // Newly Added section
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text("Newly Added", style = MaterialTheme.typography.headlineSmall.copy(color = colors.ink, fontWeight = FontWeight.Bold))
-                            Text("See all", style = MaterialTheme.typography.labelLarge.copy(color = Accent, fontWeight = FontWeight.Bold),
-                                modifier = Modifier.clickable { onNavigateToNewlyAdded() })
+                        // Newly Added section
+                        item {
+                            HomeSectionHeader(
+                                title = "Newly Added",
+                                onSeeAll = onNavigateToNewlyAdded,
+                            )
                         }
-                        Spacer(Modifier.height(14.dp))
-                    }
-                    val newlyAdded = state.properties.filter { it.id in listOf("minimal", "earth") }
-                    items(newlyAdded) { prop ->
-                        PropertyCardHorizontal(
-                            property = prop,
-                            isSaved = prop.id in savedIds,
-                            onOpen = { onNavigateToDetail(prop.id) },
-                            onSaveToggle = { viewModel.toggleSave(prop.id) },
-                            modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 16.dp),
-                        )
+                        items(properties, key = { "newly_${it.id}" }) { prop ->
+                            PropertyCardHorizontal(
+                                property = prop,
+                                isSaved = prop.id in savedIds,
+                                onOpen = { onNavigateToDetail(prop.id) },
+                                onSaveToggle = { viewModel.toggleSave(prop.id) },
+                                modifier = Modifier.padding(horizontal = 18.dp).padding(bottom = 16.dp),
+                            )
+                        }
                     }
                 }
             }

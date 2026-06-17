@@ -25,6 +25,7 @@ import com.shopnobilash.app.presentation.home.ui.HomeScreen
 import com.shopnobilash.app.presentation.listing.ui.NewlyAddedScreen
 import com.shopnobilash.app.presentation.notifications.ui.NotificationsScreen
 import com.shopnobilash.app.presentation.onboarding.ui.SplashScreen
+import com.shopnobilash.app.presentation.owner.ui.OwnerDashboardScreen
 import com.shopnobilash.app.presentation.profile.ui.ProfileScreen
 import com.shopnobilash.app.presentation.profile.viewmodel.ProfileViewModel
 import com.shopnobilash.app.presentation.profile_setup.ui.ProfileSetupScreen
@@ -223,6 +224,9 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
             ProfileScreen(
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
                 onNavigateToVerification = { navController.navigate(Screen.VerifyIdentity.route) },
+                onNavigateToOwnerDashboard = {
+                    navController.navigate(Screen.OwnerDashboard.route) { launchSingleTop = true }
+                },
                 onLogout = { viewModel.logout() },
                 onNavigateToTab = { tab -> navController.navigate(tab) { popUpTo(Screen.Home.route) { inclusive = false } } },
             )
@@ -230,6 +234,24 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
         composable(Screen.VerifyIdentity.route) {
             VerificationScreen(
                 onBack = { navController.popBackStack() },
+            )
+        }
+        composable(Screen.OwnerDashboard.route) {
+            OwnerDashboardScreen(
+                onClose = { navController.popBackStack() },
+                onReviewProfile = {
+                    navController.navigate(Screen.VerifyIdentity.route)
+                },
+                onSessionExpired = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onViewListing = { id ->
+                    navController.navigate(Screen.Detail.createRoute(id)) {
+                        popUpTo(Screen.OwnerDashboard.route) { inclusive = true }
+                    }
+                },
             )
         }
     }

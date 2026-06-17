@@ -51,8 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.shopnobilash.app.data.property.model.propertyById
-import com.shopnobilash.app.presentation.components.InitialsAvatar
+import com.shopnobilash.app.presentation.components.AppAvatar
 import com.shopnobilash.app.presentation.components.PriceText
 import com.shopnobilash.app.presentation.components.RoundIconButton
 import com.shopnobilash.app.presentation.theme.Accent
@@ -69,7 +68,7 @@ fun ChatThreadScreen(
 ) {
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val inputText by viewModel.inputText.collectAsStateWithLifecycle()
-    val property = propertyById(propertyId)
+    val property by viewModel.property.collectAsStateWithLifecycle()
     val colors = MaterialTheme.appColors
     val listState = rememberLazyListState()
 
@@ -90,12 +89,13 @@ fun ChatThreadScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 RoundIconButton(icon = Icons.AutoMirrored.Filled.ArrowBack, onClick = onBack, bgColor = colors.bg, contentDescription = "Back")
+                val owner = property?.ownerName.orEmpty()
                 Box {
-                    InitialsAvatar(name = property.ownerName, size = 42.dp)
+                    AppAvatar(imageUrl = null, name = owner, size = 42.dp)
                     Box(Modifier.size(11.dp).clip(CircleShape).background(Accent).align(Alignment.BottomEnd))
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(property.ownerName, style = MaterialTheme.typography.titleSmall.copy(color = colors.ink, fontWeight = FontWeight.Bold))
+                    Text(owner, style = MaterialTheme.typography.titleSmall.copy(color = colors.ink, fontWeight = FontWeight.Bold))
                     Text("Online now", style = MaterialTheme.typography.bodySmall.copy(color = Accent))
                 }
                 RoundIconButton(icon = Icons.Filled.Phone, onClick = {}, bgColor = colors.bg, iconColor = Accent, contentDescription = "Call")
@@ -166,14 +166,17 @@ fun ChatThreadScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(11.dp),
                 ) {
+                    val img = property?.imageUrl ?: ""
+                    val title = property?.title ?: ""
+                    val price = property?.price ?: 0
                     AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current).data(property.imageUrl).crossfade(true).build(),
+                        model = ImageRequest.Builder(LocalContext.current).data(img).crossfade(true).build(),
                         contentDescription = null, contentScale = ContentScale.Crop,
                         modifier = Modifier.size(46.dp).clip(RoundedCornerShape(11.dp)).background(colors.field),
                     )
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(property.title, style = MaterialTheme.typography.labelLarge.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 13.5.sp))
-                        PriceText(price = property.price, period = "mo", size = 13.dp)
+                        Text(title, style = MaterialTheme.typography.labelLarge.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 13.5.sp))
+                        PriceText(price = price, period = "mo", size = 13.dp)
                     }
                     Icon(Icons.Filled.ChevronRight, null, tint = colors.faint, modifier = Modifier.size(18.dp))
                 }

@@ -5,6 +5,7 @@ interface StorageRepository {
     suspend fun uploadPropertyImage(userId: String, bytes: ByteArray, mimeType: String): Result<String>
     suspend fun uploadVerificationDoc(userId: String, bytes: ByteArray, mimeType: String): Result<String>
     fun getProfilePictureUrl(fileId: String): String
+    fun getPropertyImageUrl(fileId: String): String
     fun getVerificationDocUrl(fileId: String): String
     suspend fun deleteVerificationDoc(fileId: String): Result<Unit>
 }

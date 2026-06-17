@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shopnobilash.app.presentation.theme.Primary
@@ -34,6 +35,7 @@ fun AppTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     singleLine: Boolean = true,
+    cornerRadius: Dp = 14.dp,
 ) {
     val colors = MaterialTheme.appColors
 
@@ -86,7 +88,7 @@ fun AppTextField(
         singleLine = singleLine,
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(cornerRadius),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Primary,
             unfocusedBorderColor = Color.Transparent,

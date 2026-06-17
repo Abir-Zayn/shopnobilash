@@ -28,9 +28,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.shopnobilash.app.data.chat.model.Conversation
-import com.shopnobilash.app.data.property.model.propertyById
+import com.shopnobilash.app.presentation.components.AppAvatar
 import com.shopnobilash.app.presentation.components.BottomNavBar
-import com.shopnobilash.app.presentation.components.InitialsAvatar
 import com.shopnobilash.app.presentation.theme.Accent
 import com.shopnobilash.app.presentation.theme.appColors
 import org.koin.androidx.compose.koinViewModel
@@ -68,7 +67,6 @@ fun ChatListScreen(
 @Composable
 private fun ConversationRow(conversation: Conversation, onClick: () -> Unit) {
     val colors = MaterialTheme.appColors
-    val property = propertyById(conversation.propertyId)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -77,7 +75,7 @@ private fun ConversationRow(conversation: Conversation, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
-            InitialsAvatar(name = property.ownerName, size = 52.dp)
+            AppAvatar(imageUrl = null, name = conversation.ownerName, size = 52.dp)
             if (conversation.isOnline) {
                 Box(
                     modifier = Modifier
@@ -92,7 +90,7 @@ private fun ConversationRow(conversation: Conversation, onClick: () -> Unit) {
         Column(modifier = Modifier.weight(1f).padding(bottom = 14.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    property.ownerName,
+                    conversation.ownerName,
                     style = MaterialTheme.typography.titleSmall.copy(color = colors.ink, fontWeight = FontWeight.Bold),
                     modifier = Modifier.weight(1f),
                 )

@@ -62,6 +62,9 @@ class StorageRepositoryImpl(private val storage: Storage) : StorageRepository {
     override fun getProfilePictureUrl(fileId: String): String =
         "$APPWRITE_PUBLIC_ENDPOINT/storage/buckets/$BUCKET_USER_PROFILES/files/$fileId/preview?project=$APPWRITE_PROJECT_ID"
 
+    override fun getPropertyImageUrl(fileId: String): String =
+        "$APPWRITE_PUBLIC_ENDPOINT/storage/buckets/$BUCKET_PROPERTY_IMAGES/files/$fileId/view?project=$APPWRITE_PROJECT_ID"
+
     override fun getVerificationDocUrl(fileId: String): String =
         "$APPWRITE_PUBLIC_ENDPOINT/storage/buckets/$BUCKET_VERIFICATION_DOCS/files/$fileId/view?project=$APPWRITE_PROJECT_ID"
 
