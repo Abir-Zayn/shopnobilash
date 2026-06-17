@@ -15,6 +15,9 @@ data class Profile(
     val identityNumber: String,
     val identityImageUrl: String? = null,
     val isVerified: Boolean = false,
+    val totalListings: Int = 0,
+    val totalReviews: Int = 0,
+    val ratings: Int = 0,
 )
 
 enum class IdentityType(val label: String) {

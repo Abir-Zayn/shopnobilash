@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shopnobilash.app.data.profile.model.Profile
+import com.shopnobilash.app.data.profile.model.IdentityType
 import com.shopnobilash.app.data.storage.repository.StorageRepository
 import com.shopnobilash.app.domain.auth.usecase.CheckSessionUseCase
 import com.shopnobilash.app.domain.auth.usecase.GetCurrentUserEmailUseCase
@@ -126,14 +127,14 @@ class ProfileSetupViewModel(
         val cleanPhone = phoneNumber.trim()
         val cleanEmergency = emergencyContact.trim()
 
-        if (cleanPhone.length != 11 || !cleanPhone.all { it.isDigit() }) {
-            Log.w("ProfileSetup", "Validation failed: Phone number length (${cleanPhone.length}) must be exactly 11 digits and numeric.")
-            _uiState.value = ProfileSetupUiState.Error("Phone number must be exactly 11 digits")
+        if (cleanPhone.length != 11 || !cleanPhone.all { it.isDigit() } || !cleanPhone.startsWith("01")) {
+            Log.w("ProfileSetup", "Validation failed: Phone number (${cleanPhone}) must be exactly 11 digits, numeric, and start with 01.")
+            _uiState.value = ProfileSetupUiState.Error("Phone number must be exactly 11 digits and start with 01")
             return
         }
-        if (cleanEmergency.length != 11 || !cleanEmergency.all { it.isDigit() }) {
-            Log.w("ProfileSetup", "Validation failed: Emergency contact number length (${cleanEmergency.length}) must be exactly 11 digits and numeric.")
-            _uiState.value = ProfileSetupUiState.Error("Emergency contact number must be exactly 11 digits")
+        if (cleanEmergency.length != 11 || !cleanEmergency.all { it.isDigit() } || !cleanEmergency.startsWith("01")) {
+            Log.w("ProfileSetup", "Validation failed: Emergency contact number (${cleanEmergency}) must be exactly 11 digits, numeric, and start with 01.")
+            _uiState.value = ProfileSetupUiState.Error("Emergency contact number must be exactly 11 digits and start with 01")
             return
         }
         if (permanentAddress.trim().length < 20) {
@@ -145,6 +146,41 @@ class ProfileSetupViewModel(
             Log.w("ProfileSetup", "Validation failed: Emergency contact person name length (${emergencyContactRecipient.trim().length}) is less than 10 characters.")
             _uiState.value = ProfileSetupUiState.Error("Emergency contact person name must be at least 10 characters")
             return
+        }
+
+        val cleanIdentityNumber = identityNumber.trim()
+        when (identityType) {
+            IdentityType.NID.label -> {
+                if (cleanIdentityNumber.length != 10 && cleanIdentityNumber.length != 17) {
+                    Log.w("ProfileSetup", "Validation failed: NID length (${cleanIdentityNumber.length}) must be 10 or 17.")
+                    _uiState.value = ProfileSetupUiState.Error("NID number must be either 10 or 17 digits")
+                    return
+                }
+                if (!cleanIdentityNumber.all { it.isDigit() }) {
+                    Log.w("ProfileSetup", "Validation failed: NID must be numeric.")
+                    _uiState.value = ProfileSetupUiState.Error("NID number must contain only digits")
+                    return
+                }
+            }
+            IdentityType.PASSPORT.label -> {
+                if (cleanIdentityNumber.length != 9) {
+                    Log.w("ProfileSetup", "Validation failed: Passport length (${cleanIdentityNumber.length}) must be 9.")
+                    _uiState.value = ProfileSetupUiState.Error("Passport number must be exactly 9 characters")
+                    return
+                }
+            }
+            IdentityType.BIRTH_CERTIFICATE.label -> {
+                if (cleanIdentityNumber.length != 17) {
+                    Log.w("ProfileSetup", "Validation failed: Birth Certificate length (${cleanIdentityNumber.length}) must be 17.")
+                    _uiState.value = ProfileSetupUiState.Error("Birth Certificate number must be exactly 17 digits")
+                    return
+                }
+                if (!cleanIdentityNumber.all { it.isDigit() }) {
+                    Log.w("ProfileSetup", "Validation failed: Birth Certificate must be numeric.")
+                    _uiState.value = ProfileSetupUiState.Error("Birth Certificate number must contain only digits")
+                    return
+                }
+            }
         }
 
         viewModelScope.launch {

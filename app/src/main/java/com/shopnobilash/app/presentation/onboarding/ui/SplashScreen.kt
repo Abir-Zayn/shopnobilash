@@ -46,6 +46,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.shopnobilash.app.R
 import com.shopnobilash.app.presentation.auth.viewmodel.AuthUiState
 import com.shopnobilash.app.presentation.auth.viewmodel.AuthViewModel
 import com.shopnobilash.app.presentation.theme.Accent
@@ -83,39 +86,34 @@ fun SplashScreen(
     val showCarousel = state is AuthUiState.SessionInvalid
 
     if (!showCarousel) {
-        // Session check in progress — show branded loading screen
+        // Session check in progress — show app logo centered on white background with loading indicator
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0F141B)),
-            contentAlignment = Alignment.Center,
+                .background(Color.White),
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(11.dp))
-                            .background(Accent),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(Icons.Filled.Home, null, tint = Color.White, modifier = Modifier.size(22.dp))
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Text(
-                        "DORent",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 22.sp,
-                        ),
-                    )
-                }
-                Spacer(Modifier.height(32.dp))
+            // App Logo in the center
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.size(108.dp),
+                )
+            }
+            // CircularProgressIndicator at the bottom center
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 80.dp),
+                contentAlignment = Alignment.BottomCenter,
+            ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(36.dp),
                     color = Accent,
-                    strokeWidth = 2.dp,
+                    strokeWidth = 3.dp,
                 )
             }
         }

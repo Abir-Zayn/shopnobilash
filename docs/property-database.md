@@ -231,8 +231,15 @@ Extended user data for renters/app users. `$id` **must** be set manually to matc
 | `identity_number` | string(50) | ✅ | **UNIQUE** | Card/document number |
 | `identity_image_url` | string(2048) | ❌ | — | Storage bucket URL for uploaded document photo |
 | `is_verified` | boolean | ❌ | Default: `false` | Admin manually flips to `true` after document check |
+| `total_listings` | integer | ❌ | Default: `0`, min: 0 | Count of properties this user owns/listed |
+| `total_reviews` | integer | ❌ | Default: `0`, min: 0 | Count of reviews involving this user |
+| `ratings` | integer | ❌ | Default: `0`, min: 0 | Aggregate rating — placeholder, scoring logic TBD |
 | `created_at` | datetime | ❌ | — | ISO 8601 |
 | `updated_at` | datetime | ❌ | — | ISO 8601 |
+
+> `total_listings` / `total_reviews` / `ratings` are denormalized counters, all
+> default `0`. Wired to live updates + cron reconciliation later — see council
+> notes. For now: stored, default 0, untouched.
 
 ### Indexes
 

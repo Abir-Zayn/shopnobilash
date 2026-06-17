@@ -76,6 +76,7 @@ graphify-out/
 # Docs
 docs/work-list.md
 docs/session-handoff.md
+docs/spec.md
 
 # Appwrite Functions
 appwrite-functions/**/node_modules/

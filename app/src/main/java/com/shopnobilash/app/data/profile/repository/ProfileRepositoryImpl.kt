@@ -69,5 +69,8 @@ class ProfileRepositoryImpl(private val databases: Databases) : ProfileRepositor
         identityNumber = this["identity_number"] as String,
         identityImageUrl = this["identity_image_url"] as? String,
         isVerified = this["is_verified"] as? Boolean ?: false,
+        totalListings = (this["total_listings"] as? Number)?.toInt() ?: 0,
+        totalReviews = (this["total_reviews"] as? Number)?.toInt() ?: 0,
+        ratings = (this["ratings"] as? Number)?.toInt() ?: 0,
     )
 }

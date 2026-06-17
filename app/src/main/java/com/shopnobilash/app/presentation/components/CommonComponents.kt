@@ -98,28 +98,5 @@ fun StackHeader(
 
 @Composable
 fun InitialsAvatar(name: String, size: Dp = 48.dp) {
-    val palette = listOf(
-        Color(0xFF1FAE84), Color(0xFF2F6BE3), Color(0xFF7C5CFC),
-        Color(0xFFE27A38), Color(0xFFEA5A8B), Color(0xFF2BA8A1), Color(0xFFE0A52B),
-    )
-    val hash = name.fold(0L) { acc, c -> (acc * 31 + c.code) and 0xFFFFFFFFL }
-    val bg = palette[(hash % palette.size).toInt()]
-    val initials = name.split(" ").filter { it.isNotBlank() }.take(2).joinToString("") { it[0].uppercase() }
-
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(bg),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = initials,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = (size.value * 0.38f).sp,
-            ),
-        )
-    }
+    AppAvatar(imageUrl = null, name = name, size = size)
 }

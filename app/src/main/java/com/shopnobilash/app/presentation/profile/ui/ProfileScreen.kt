@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.House
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -48,7 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.shopnobilash.app.presentation.components.BottomNavBar
-import com.shopnobilash.app.presentation.components.InitialsAvatar
+import com.shopnobilash.app.presentation.components.AppAvatar
+import com.shopnobilash.app.presentation.components.AppTile
+import com.shopnobilash.app.presentation.components.AppTileDivider
 import com.shopnobilash.app.presentation.components.RoundIconButton
 import com.shopnobilash.app.presentation.theme.Accent
 import com.shopnobilash.app.presentation.theme.AccentDeep
@@ -66,17 +69,7 @@ data class MenuItem(
     val label: String,
     val tint: Color,
     val badge: String? = null,
-    val route: String? = null,
-)
-
-val MENU_ITEMS = listOf(
-    MenuItem(Icons.Filled.Person,       "Personal information", Accent),
-    MenuItem(Icons.Filled.VerifiedUser, "Verify Identity",      Blue,        route = "verify_identity"),
-    MenuItem(Icons.Filled.Apartment,    "My properties",        Blue,        badge = "2"),
-    MenuItem(Icons.Filled.CreditCard,   "Payment methods",      Color(0xFF7C5CFC)),
-    MenuItem(Icons.Filled.Notifications,"Notifications",        TagOrange,   route = "notifications"),
-    MenuItem(Icons.Filled.Shield,       "Privacy & security",   Color(0xFF3AAFA9)),
-    MenuItem(Icons.Filled.HelpOutline,  "Help center",          Muted),
+    val onClick: (() -> Unit)? = null,
 )
 
 @Composable
@@ -89,6 +82,17 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = MaterialTheme.appColors
+
+    val menuItems = listOf(
+        MenuItem(Icons.Filled.Person,       "Personal information", Accent),
+        MenuItem(Icons.Filled.VerifiedUser, "Verify Identity",      Blue,        onClick = onNavigateToVerification),
+        MenuItem(Icons.Filled.House,        "Provide Rental",       Accent),
+        MenuItem(Icons.Filled.Apartment,    "My properties",        Blue,        badge = "2"),
+        MenuItem(Icons.Filled.CreditCard,   "Payment methods",      Color(0xFF7C5CFC)),
+        MenuItem(Icons.Filled.Notifications,"Notifications",        TagOrange,   onClick = onNavigateToNotifications),
+        MenuItem(Icons.Filled.Shield,       "Privacy & security",   Color(0xFF3AAFA9)),
+        MenuItem(Icons.Filled.HelpOutline,  "Help center",          Muted),
+    )
 
     Scaffold(
         containerColor = colors.bg,
@@ -122,10 +126,10 @@ fun ProfileScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                    InitialsAvatar(name = "Emma Watson", size = 62.dp)
+                    AppAvatar(imageUrl = uiState.profilePictureUrl, name = uiState.name, size = 62.dp)
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Emma Watson", style = MaterialTheme.typography.titleLarge.copy(color = colors.ink, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp))
-                        Text("emma@dorent.com", style = MaterialTheme.typography.bodySmall.copy(color = colors.muted))
+                        Text(uiState.name.ifEmpty { "User" }, style = MaterialTheme.typography.titleLarge.copy(color = colors.ink, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp))
+                        Text(uiState.email, style = MaterialTheme.typography.bodySmall.copy(color = colors.muted))
                     }
                     Row(
                         modifier = Modifier
@@ -209,38 +213,17 @@ fun ProfileScreen(
                         .background(colors.card)
                         .padding(vertical = 6.dp, horizontal = 4.dp),
                 ) {
-                    MENU_ITEMS.forEachIndexed { i, item ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    when (item.route) {
-                                        "notifications"   -> onNavigateToNotifications()
-                                        "verify_identity" -> onNavigateToVerification()
-                                    }
-                                }
-                                .padding(horizontal = 14.dp, vertical = 13.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(13.dp),
-                        ) {
-                            Box(
-                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(item.tint),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(item.icon, null, tint = Color.White, modifier = Modifier.size(19.dp))
-                            }
-                            Text(item.label, style = MaterialTheme.typography.titleSmall.copy(color = colors.ink, fontWeight = FontWeight.SemiBold, fontSize = 14.5.sp), modifier = Modifier.weight(1f))
-                            if (item.badge != null) {
-                                Box(
-                                    modifier = Modifier.clip(RoundedCornerShape(50)).background(AccentSoft).padding(horizontal = 6.dp, vertical = 2.dp),
-                                ) {
-                                    Text(item.badge, style = MaterialTheme.typography.labelSmall.copy(color = AccentDeep, fontWeight = FontWeight.Bold, fontSize = 11.5.sp))
-                                }
-                            }
-                            Icon(Icons.Filled.ChevronRight, null, tint = colors.faint, modifier = Modifier.size(18.dp))
-                        }
-                        if (i < MENU_ITEMS.lastIndex) {
-                            Box(Modifier.fillMaxWidth().height(1.dp).background(colors.line).padding(start = 63.dp))
+                    menuItems.forEachIndexed { i, item ->
+                        AppTile(
+                            icon = item.icon,
+                            iconBg = item.tint,
+                            text = item.label,
+                            hasNotification = item.badge != null,
+                            notificationNumber = item.badge,
+                            onClick = item.onClick ?: {},
+                        )
+                        if (i < menuItems.lastIndex) {
+                            AppTileDivider()
                         }
                     }
                 }
