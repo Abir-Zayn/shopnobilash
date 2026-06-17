@@ -4,7 +4,24 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+  <!-- Left green roof -->
+  <path
+      android:fillColor="#88C404"
+      android:pathData="M 42,42 L 66,66 L 60.34,66 L 42,47.66 L 23.66,66 L 18,66 Z" />
+  <!-- Right green roof -->
+  <path
+      android:fillColor="#88C404"
+      android:pathData="M 66,42 L 90,66 L 84.34,66 L 66,47.66 L 47.66,66 L 42,66 Z" />
+  <!-- White mask for black roof inner space to cover overlapping green roofs -->
   <path
       android:fillColor="#FFFFFF"
-      android:pathData="M54,28 L38,46 L43,46 L43,64 L65,64 L65,46 L70,46 Z M48,64 L48,55 L60,55 L60,64 Z"/>
+      android:pathData="M 54,47.66 L 72.34,66 L 35.66,66 Z" />
+  <!-- Middle black roof -->
+  <path
+      android:fillColor="#151515"
+      android:pathData="M 54,42 L 78,66 L 72.34,66 L 54,47.66 L 35.66,66 L 30,66 Z" />
+  <!-- Window (four square panes) -->
+  <path
+      android:fillColor="#151515"
+      android:pathData="M50.75,56h2.5v2.5h-2.5z M54.75,56h2.5v2.5h-2.5z M50.75,60h2.5v2.5h-2.5z M54.75,60h2.5v2.5h-2.5z" />
 </vector>

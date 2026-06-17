@@ -24,6 +24,7 @@ class ProfileRepositoryImpl(private val databases: Databases) : ProfileRepositor
                 put("identity_number", profile.identityNumber)
                 put("is_verified", false)
                 profile.profilePictureUrl?.let { put("profile_picture_url", it) }
+                profile.identityImageUrl?.let { put("identity_image_url", it) }
                 profile.bloodGroup?.let { put("blood_group", it) }
                 profile.occupation?.let { put("occupation", it) }
             }
@@ -58,6 +59,7 @@ class ProfileRepositoryImpl(private val databases: Databases) : ProfileRepositor
         emergencyContactRecipient = this["emergency_contact_recipient"] as String,
         identityType = this["identity_type"] as String,
         identityNumber = this["identity_number"] as String,
+        identityImageUrl = this["identity_image_url"] as? String,
         isVerified = this["is_verified"] as? Boolean ?: false,
     )
 }

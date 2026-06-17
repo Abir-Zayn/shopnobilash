@@ -71,6 +71,7 @@ Desktop.ini
 # Claude
 .claude/
 claude-android-skill/
+graphify-out/
 
 # Docs
 docs/work-list.md

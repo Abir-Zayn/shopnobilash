@@ -56,6 +56,9 @@ class StorageRepositoryImpl(private val storage: Storage) : StorageRepository {
     override fun getProfilePictureUrl(fileId: String): String =
         "$APPWRITE_PUBLIC_ENDPOINT/storage/buckets/$BUCKET_USER_PROFILES/files/$fileId/preview?project=$APPWRITE_PROJECT_ID"
 
+    override fun getVerificationDocUrl(fileId: String): String =
+        "$APPWRITE_PUBLIC_ENDPOINT/storage/buckets/$BUCKET_VERIFICATION_DOCS/files/$fileId/view?project=$APPWRITE_PROJECT_ID"
+
     override suspend fun deleteVerificationDoc(fileId: String): Result<Unit> =
         runCatching {
             storage.deleteFile(bucketId = BUCKET_VERIFICATION_DOCS, fileId = fileId)

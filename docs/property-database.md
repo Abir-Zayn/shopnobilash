@@ -18,11 +18,14 @@
 
 ## Table: `owners`
 
-Stores property owner identity and contact information.
+Stores property owner identity and contact information. An owner record is the
+**listing/seller identity** of an app account — distinct from the renter
+`profiles` record but bound to the same Appwrite Auth user via `user_id`.
 
 | Column | Type | Required | Constraints | Notes |
 |---|---|---|---|---|
-| `$id` | string | auto | Primary Key | Appwrite auto-generated ID |
+| `$id` | string | auto | Primary Key | Appwrite auto-generated ID (kept random — `property_owners` relationships reference it) |
+| `user_id` | string(36) | ❌ | **UNIQUE** | Appwrite Auth `$id` of the owning account. Nullable for legacy/admin-created rows. One owner record per account. |
 | `name` | string(255) | ✅ | — | Full name of owner |
 | `address_line1` | string(255) | ✅ | — | Primary address |
 | `address_line2` | string(255) | ❌ | — | Secondary address (apt, floor, etc.) |
@@ -36,6 +39,40 @@ Stores property owner identity and contact information.
 | Index Key | Type | Columns |
 |---|---|---|
 | `idx_tin_unique` | UNIQUE | `tin_certificate_no` |
+| `idx_user_id_unique` | UNIQUE | `user_id` |
+
+### Account ↔ Owner Binding
+
+- **One account = one owner.** `user_id` mirrors the Auth `$id`, UNIQUE-indexed.
+  An account can own many properties (via `property_owners`) but never more than
+  one `owners` record. Duplicate insert throws `409` — surface as
+  "You already have an owner account."
+- **`user_id` is nullable**, not required — existing/admin-created owner rows
+  predate the account link and stay null. Never make it required (breaks backfill).
+- **`$id` stays random.** Do NOT set `owners.$id = Auth $id`: it is immutable in
+  Appwrite and existing `property_owners` relationships already reference it.
+- **Resolve ownership by session:**
+
+```kotlin
+val ownerRow = databases.listDocuments(
+    databaseId = PROPERTY_DATABASE_ID,
+    collectionId = TABLE_OWNERS,
+    queries = listOf(Query.equal("user_id", account.get().id))
+).documents.firstOrNull()
+```
+
+### "Become an Owner" Flow
+
+1. Gate the action behind an **existing `profiles` row** — guarantees `user_id`
+   always maps to a real profile (no orphan owners).
+2. Pre-fill `name` / address from the user's `profiles` data; user supplies
+   `tin_certificate_no`.
+3. `databases.createDocument(TABLE_OWNERS, documentId = ID.unique(), data = mapOf("user_id" to account.get().id, ...))`.
+4. Catch `409` on the UNIQUE index → user already an owner; route to owner dashboard.
+
+> `profiles.identity_number` (renter NID/Passport) and `owners.tin_certificate_no`
+> (business tax id) are separate identity fields by design — they serve different
+> KYC purposes and are not duplicates.
 
 ---
 
