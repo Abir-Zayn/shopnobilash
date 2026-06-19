@@ -102,11 +102,21 @@ di/             → Koin modules
 
 ---
 
-## Download
+## 📥 Download
 
-> **Version 1.0** is currently in development. Public release coming soon.
+<div align="center">
 
-<!-- Add APK/Play Store link here when available -->
+### 🤖 Android APK — v1.2
+
+[![⬇️ Download APK](https://img.shields.io/badge/⬇️_Download-APK_v1.2-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://drive.google.com/file/d/1SdK4BSFELU6kliUu5CVS9wC-QjP3eYbg/view?usp=sharing)
+
+**[⬇️ Download Shopnobilash v1.2 (.apk)](https://drive.google.com/file/d/1SdK4BSFELU6kliUu5CVS9wC-QjP3eYbg/view?usp=sharing)**
+
+</div>
+
+> 📱 **Install steps:** Download the APK → open it → if prompted, allow **"Install from unknown sources"** for your browser/file manager → tap **Install**.
+>
+> Requires **Android 8.0 (API 26)** or newer.
 
 ---
 
