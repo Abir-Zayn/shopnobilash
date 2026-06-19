@@ -28,6 +28,7 @@ object PropertyStatus {
 data class PropertyDraft(
     val category: PropertyCategory,
     val houseName: String,
+    val location: String? = null,
     val floor: String? = null,
     val bedNo: Int,
     val bathNo: Int,

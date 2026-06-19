@@ -3,6 +3,7 @@ package com.shopnobilash.app.data.property.repository
 import com.shopnobilash.app.constants.PROPERTY_DATABASE_ID
 import com.shopnobilash.app.constants.TABLE_PROPERTIES
 import com.shopnobilash.app.constants.TABLE_PROPERTY_OWNERS
+import com.shopnobilash.app.constants.TABLE_OWNERS
 import com.shopnobilash.app.data.property.model.Property
 import com.shopnobilash.app.data.property.model.PropertyDraft
 import com.shopnobilash.app.data.property.model.PropertyStatus
@@ -43,31 +44,70 @@ class PropertyRepositoryImpl(private val databases: Databases) : PropertyReposit
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun getPropertyById(id: String): Result<Property> = runCatching {
-        val doc = databases.getDocument(
+        val propDoc = databases.getDocument(
             databaseId = PROPERTY_DATABASE_ID,
             collectionId = TABLE_PROPERTIES,
             documentId = id,
         )
-        (doc.data as Map<String, Any>).toProperty(doc.id)
+        val propData = propDoc.data as Map<String, Any>
+        
+        var ownerName = ""
+        val ownerRole = "Owner"
+        
+        runCatching {
+            val junctionDocs = databases.listDocuments(
+                databaseId = PROPERTY_DATABASE_ID,
+                collectionId = TABLE_PROPERTY_OWNERS,
+                queries = listOf(Query.equal("property_id", id))
+            )
+            val junctionDoc = junctionDocs.documents.firstOrNull()
+            if (junctionDoc != null) {
+                val ownerData = junctionDoc.data["owner_id"]
+                val ownerId = when (ownerData) {
+                    is Map<*, *> -> ownerData["\$id"] as? String
+                    is String -> ownerData
+                    else -> null
+                }
+                if (ownerId != null) {
+                    val ownerDoc = databases.getDocument(
+                        databaseId = PROPERTY_DATABASE_ID,
+                        collectionId = TABLE_OWNERS,
+                        documentId = ownerId
+                    )
+                    ownerName = ownerDoc.data["name"] as? String ?: ""
+                }
+            }
+        }
+        
+        propData.toProperty(
+            id = propDoc.id,
+            ownerName = ownerName.ifEmpty { "Property Owner" },
+            ownerRole = ownerRole
+        )
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun Map<String, Any>.toProperty(id: String) = Property(
+    private fun Map<String, Any>.toProperty(
+        id: String,
+        ownerName: String = "",
+        ownerRole: String = "",
+    ) = Property(
         id = id,
         title = this["house_name"] as? String ?: "",
         type = this["property_category"] as? String ?: "",
         city = "",
-        address = "",
+        address = this["location"] as? String ?: "",
         price = (this["rent"] as? Number)?.toInt() ?: 0,
         period = "mo",
         beds = (this["bed_no"] as? Number)?.toInt() ?: 0,
         baths = (this["bath_no"] as? Number)?.toInt() ?: 0,
         sqft = (this["area_sqft"] as? Number)?.toInt() ?: 0,
         rating = 0.0,
-        ownerName = "",
-        ownerRole = "",
+        ownerName = ownerName.ifEmpty { this["ownerName"] as? String ?: "" },
+        ownerRole = ownerRole.ifEmpty { this["ownerRole"] as? String ?: "Owner" },
         description = this["description"] as? String ?: "",
         imageUrl = (this["property_img"] as? List<*>)?.firstOrNull() as? String ?: "",
+        imageUrls = (this["property_img"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
     )
 
     override suspend fun createProperty(
@@ -90,6 +130,7 @@ class PropertyRepositoryImpl(private val databases: Databases) : PropertyReposit
                 put("rent", draft.rent)
                 put("status", PropertyStatus.AVAILABLE)
                 put("property_category", draft.category.rawValue)
+                draft.location?.takeIf { it.isNotBlank() }?.let { put("location", it) }
                 draft.floor?.takeIf { it.isNotBlank() }?.let { put("floor", it) }
                 draft.description?.takeIf { it.isNotBlank() }?.let { put("description", it) }
                 draft.contractTerms?.takeIf { it.isNotBlank() }?.let { put("contract_terms", it) }

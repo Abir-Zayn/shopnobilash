@@ -16,6 +16,7 @@ data class Property(
     val ownerRole: String,
     val description: String,
     val imageUrl: String,
+    val imageUrls: List<String> = emptyList(),
 )
 
 fun formatPrice(price: Int): String = "\$${"%,d".format(price)}"

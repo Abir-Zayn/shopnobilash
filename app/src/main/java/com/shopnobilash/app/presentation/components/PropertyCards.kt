@@ -1,12 +1,14 @@
 package com.shopnobilash.app.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -46,19 +49,25 @@ fun PropertyCardVertical(
     onOpen: () -> Unit,
     onSaveToggle: () -> Unit,
     modifier: Modifier = Modifier,
-    width: Int = 200,
+    width: Int = 260,
 ) {
     val colors = MaterialTheme.appColors
     Box(
         modifier = modifier
             .width(width.dp)
-            .shadow(4.dp, RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
+            .shadow(4.dp, RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(colors.card)
             .clickable(onClick = onOpen),
     ) {
-        Column {
-            Box(modifier = Modifier.padding(8.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(colors.field),
+            ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(property.imageUrl)
@@ -66,39 +75,148 @@ fun PropertyCardVertical(
                         .build(),
                     contentDescription = property.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(132.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(colors.field),
+                    modifier = Modifier.fillMaxSize(),
                 )
-                Box(modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)) {
-                    SaveToggleButton(
-                        saved = isSaved, onClick = onSaveToggle,
-                        icon = Icons.Outlined.BookmarkBorder,
-                        iconFilled = Icons.Filled.Bookmark,
+                // Translucent price tag overlaid at top-left of image
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .background(
+                            color = Color.White.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(50)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(50)
+                        )
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        text = "৳ ${"%,d".format(property.price)}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = colors.ink,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 15.sp,
+                        ),
                     )
                 }
             }
-            Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, bottom = 14.dp, top = 4.dp)) {
-                AppTag(text = property.type)
-                Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = property.title,
-                    style = MaterialTheme.typography.titleMedium.copy(color = colors.ink, fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = colors.ink,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                    ),
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                Spacer(Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.LocationOn, null, tint = colors.muted, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = if (isSaved) "Remove from saved" else "Save",
+                    tint = if (isSaved) colors.accent else colors.muted,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(onClick = onSaveToggle),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.LocationOn,
+                    contentDescription = null,
+                    tint = colors.muted,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = property.address,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.muted,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.5.sp,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.KingBed,
+                        contentDescription = null,
+                        tint = colors.muted,
+                        modifier = Modifier.size(16.dp),
+                    )
                     Text(
-                        text = property.city,
-                        style = MaterialTheme.typography.bodySmall.copy(color = colors.muted, fontWeight = FontWeight.Medium),
-                        modifier = Modifier.padding(start = 4.dp),
+                        text = "${property.beds} Bed${if (property.beds > 1) "rooms" else "room"}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.5.sp,
+                        ),
                     )
                 }
-                Spacer(Modifier.height(10.dp))
-                PriceText(price = property.price, period = property.period, size = 16.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Bathtub,
+                        contentDescription = null,
+                        tint = colors.muted,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = "${property.baths} Bath${if (property.baths > 1) "s" else ""}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.5.sp,
+                        ),
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.SquareFoot,
+                        contentDescription = null,
+                        tint = colors.muted,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = "${"%,d".format(property.sqft)} sqft",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.5.sp,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -116,13 +234,19 @@ fun PropertyCardHorizontal(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(20.dp))
-            .clip(RoundedCornerShape(20.dp))
+            .shadow(4.dp, RoundedCornerShape(24.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(colors.card)
             .clickable(onClick = onOpen),
     ) {
-        Column {
-            Box(modifier = Modifier.padding(8.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(colors.field),
+            ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
                         .data(property.imageUrl)
@@ -130,59 +254,149 @@ fun PropertyCardHorizontal(
                         .build(),
                     contentDescription = property.title,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(168.dp)
-                        .clip(RoundedCornerShape(15.dp))
-                        .background(colors.field),
+                    modifier = Modifier.fillMaxSize(),
                 )
-                Box(modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)) {
-                    SaveToggleButton(
-                        saved = isSaved, onClick = onSaveToggle,
-                        icon = Icons.Outlined.BookmarkBorder,
-                        iconFilled = Icons.Filled.Bookmark,
+                // Translucent price tag overlaid at top-left of image
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(12.dp)
+                        .background(
+                            color = Color.White.copy(alpha = 0.45f),
+                            shape = RoundedCornerShape(50)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = Color.White.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(50)
+                        )
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        text = "৳ ${"%,d".format(property.price)}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = colors.ink,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 15.sp,
+                        ),
                     )
                 }
             }
-            Column(modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 16.dp, top = 4.dp)) {
-                AppTag(text = property.type)
-                Spacer(Modifier.height(8.dp))
-                PriceText(price = property.price, period = "month", size = 18.dp)
-                Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = property.title,
                     style = MaterialTheme.typography.titleLarge.copy(
-                        color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 16.sp,
+                        color = colors.ink,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
                     ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
                 )
-                Spacer(Modifier.height(3.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.LocationOn, null, tint = colors.muted, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(8.dp))
+                Icon(
+                    imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = if (isSaved) "Remove from saved" else "Save",
+                    tint = if (isSaved) colors.accent else colors.muted,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(onClick = onSaveToggle),
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.LocationOn,
+                    contentDescription = null,
+                    tint = colors.muted,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = property.address,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = colors.muted,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                    ),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.KingBed,
+                        contentDescription = null,
+                        tint = colors.muted,
+                        modifier = Modifier.size(16.dp),
+                    )
                     Text(
-                        text = property.address,
-                        style = MaterialTheme.typography.bodySmall.copy(color = colors.muted),
-                        maxLines = 1,
-                        modifier = Modifier.padding(start = 4.dp),
+                        text = "${property.beds} Bed${if (property.beds > 1) "rooms" else "room"}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                        ),
                     )
                 }
-                Spacer(Modifier.height(12.dp))
-                Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.line))
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    MetaItem(icon = Icons.Filled.KingBed, label = "${property.beds} bed")
-                    MetaItem(icon = Icons.Filled.Bathtub, label = "${property.baths} bath")
-                    MetaItem(icon = Icons.Filled.SquareFoot, label = "${property.sqft}sqft")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Bathtub,
+                        contentDescription = null,
+                        tint = colors.muted,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = "${property.baths} Bath${if (property.baths > 1) "s" else ""}",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                        ),
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.SquareFoot,
+                        contentDescription = null,
+                        tint = colors.muted,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = "${"%,d".format(property.sqft)} sqft",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = colors.muted,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                        ),
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun MetaItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
-    val colors = MaterialTheme.appColors
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-        Icon(icon, null, tint = colors.muted, modifier = Modifier.size(16.dp))
-        Text(label, style = MaterialTheme.typography.bodySmall.copy(color = colors.muted, fontWeight = FontWeight.SemiBold))
     }
 }

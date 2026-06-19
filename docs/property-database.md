@@ -87,6 +87,7 @@ Stores property listing details, availability, and media.
 |---|---|---|---|---|
 | `$id` | string | auto | Primary Key | Appwrite auto-generated ID |
 | `house_name` | string(255) | ✅ | — | Display name of property |
+| `location` | string(255) | ❌ | — | Address / location text of the property |
 | `bed_no` | integer | ✅ | — | Number of bedrooms |
 | `bath_no` | integer | ✅ | — | Number of bathrooms |
 | `area_sqft` | integer | ✅ | — | Total area in square feet |

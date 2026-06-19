@@ -1,15 +1,23 @@
 package com.shopnobilash.app.presentation.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.shopnobilash.app.presentation.theme.appColors
 
 /**
  * Shimmer placeholder matching PropertyCardVertical dimensions.
@@ -18,55 +26,94 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PropertyCardShimmer(
     modifier: Modifier = Modifier,
+    width: Int = 260,
 ) {
-    Column(modifier = modifier) {
+    val colors = MaterialTheme.appColors
+    Column(
+        modifier = modifier
+            .width(width.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.card)
+            .padding(12.dp),
+    ) {
         // Image placeholder
         ShimmerBox(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(132.dp)
-                .clip(RoundedCornerShape(14.dp)),
+                .height(180.dp)
+                .clip(RoundedCornerShape(20.dp)),
         )
 
         Spacer(Modifier.height(12.dp))
 
-        // Tag placeholder
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.35f)
-                .height(16.dp)
-                .clip(RoundedCornerShape(7.dp)),
-        )
+        // Title placeholder row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ShimmerBox(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(18.dp)
+                    .clip(RoundedCornerShape(6.dp)),
+            )
+            Spacer(Modifier.width(8.dp))
+            ShimmerBox(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+        }
 
         Spacer(Modifier.height(8.dp))
 
-        // Title placeholder
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .height(18.dp)
-                .clip(RoundedCornerShape(6.dp)),
-        )
+        // Location placeholder row
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            ShimmerBox(
+                modifier = Modifier
+                    .size(16.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+            Spacer(Modifier.width(6.dp))
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(6.dp)),
+            )
+        }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(14.dp))
 
-        // City placeholder
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .height(14.dp)
-                .clip(RoundedCornerShape(6.dp)),
-        )
-
-        Spacer(Modifier.height(10.dp))
-
-        // Price placeholder
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.45f)
-                .height(20.dp)
-                .clip(RoundedCornerShape(6.dp)),
-        )
+        // Meta placeholder (Beds / Baths / Sqft)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            repeat(3) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                    )
+                    ShimmerBox(
+                        modifier = Modifier
+                            .width(50.dp)
+                            .height(12.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -77,63 +124,91 @@ fun PropertyCardShimmer(
 fun PropertyCardHorizontalShimmer(
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    val colors = MaterialTheme.appColors
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(24.dp))
+            .background(colors.card)
+            .padding(12.dp),
+    ) {
         // Image placeholder
         ShimmerBox(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(168.dp)
-                .clip(RoundedCornerShape(15.dp)),
+                .height(200.dp)
+                .clip(RoundedCornerShape(20.dp)),
         )
 
         Spacer(Modifier.height(12.dp))
 
-        // Tag
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.3f)
-                .height(16.dp)
-                .clip(RoundedCornerShape(7.dp)),
-        )
+        // Title placeholder row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ShimmerBox(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(20.dp)
+                    .clip(RoundedCornerShape(6.dp)),
+            )
+            Spacer(Modifier.width(8.dp))
+            ShimmerBox(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+        }
 
         Spacer(Modifier.height(8.dp))
 
-        // Price
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.4f)
-                .height(22.dp)
-                .clip(RoundedCornerShape(6.dp)),
-        )
+        // Location placeholder row
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            ShimmerBox(
+                modifier = Modifier
+                    .size(16.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            )
+            Spacer(Modifier.width(6.dp))
+            ShimmerBox(
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(6.dp)),
+            )
+        }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(14.dp))
 
-        // Title
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.85f)
-                .height(18.dp)
-                .clip(RoundedCornerShape(6.dp)),
-        )
-
-        Spacer(Modifier.height(6.dp))
-
-        // Address
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.65f)
-                .height(14.dp)
-                .clip(RoundedCornerShape(6.dp)),
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        // Meta row (beds/baths/sqft)
-        ShimmerBox(
-            modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .height(16.dp)
-                .clip(RoundedCornerShape(6.dp)),
-        )
+        // Meta placeholder row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            repeat(3) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .size(16.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                    )
+                    ShimmerBox(
+                        modifier = Modifier
+                            .width(55.dp)
+                            .height(12.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                    )
+                }
+            }
+        }
     }
 }
