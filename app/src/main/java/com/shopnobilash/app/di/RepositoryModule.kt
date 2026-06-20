@@ -18,7 +18,7 @@ import org.koin.dsl.module
 
 val repositoryModule = module {
     single<AuthRepository> { AuthRepositoryImpl(get()) }
-    single<PropertyRepository> { PropertyRepositoryImpl(get()) }
+    single<PropertyRepository> { PropertyRepositoryImpl(get(), get()) }
     single<OwnerRepository> { OwnerRepositoryImpl(get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(get()) }
     single<StorageRepository> { StorageRepositoryImpl(get()) }

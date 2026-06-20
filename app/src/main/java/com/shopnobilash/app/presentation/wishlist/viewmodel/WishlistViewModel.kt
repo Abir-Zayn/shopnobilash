@@ -9,14 +9,12 @@ import com.shopnobilash.app.domain.property.usecase.ToggleSavePropertyUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class WishlistUiState(
     val savedProperties: List<Property> = emptyList(),
-    val selectedFilter: String = "All",
     val isLoading: Boolean = true,
 )
 
@@ -27,7 +25,6 @@ class WishlistViewModel(
 ) : ViewModel() {
 
     private val _allProperties = MutableStateFlow<List<Property>>(emptyList())
-    private val _filterFlow = MutableStateFlow("All")
 
     init {
         viewModelScope.launch {
@@ -40,13 +37,10 @@ class WishlistViewModel(
     val uiState: StateFlow<WishlistUiState> = combine(
         getSavedPropertyIdsUseCase(),
         _allProperties,
-        _filterFlow,
-    ) { savedIds, allProps, filter ->
-        val props = allProps.filter { it.id in savedIds }
-        val filtered = if (filter == "All") props else props.filter { it.type == filter }
-        WishlistUiState(savedProperties = filtered, selectedFilter = filter, isLoading = false)
+    ) { savedIds, allProps ->
+        val saved = allProps.filter { it.id in savedIds }
+        WishlistUiState(savedProperties = saved, isLoading = false)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WishlistUiState())
 
-    fun setFilter(filter: String) { _filterFlow.value = filter }
     fun toggleSave(id: String) { viewModelScope.launch { toggleSavePropertyUseCase(id) } }
 }

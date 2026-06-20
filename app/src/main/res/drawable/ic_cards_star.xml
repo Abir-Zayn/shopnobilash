@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="960"
+    android:viewportHeight="960">
+    <!--
+      "cards_star" Material Symbols Outlined glyph (weight 400, FILL 0, GRAD 0).
+      Source: https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/cards_star/default/24px.svg
+      The official pathData uses the SVG viewBox "0 -960 960 960" (y up, negative).
+      Android VectorDrawable viewports start at (0,0) with y increasing downward,
+      so the path is wrapped in a group translated +960 on the Y axis to map the
+      SVG coordinate space into the drawable viewport. PathData is verbatim from
+      Google. Licensed under the Apache License, Version 2.0.
+    -->
+    <group
+        android:name="cardsStar"
+        android:translateX="0"
+        android:translateY="960">
+        <path
+            android:fillColor="#000000"
+            android:pathData="m489-460 91-55 91 55-24-104 80-69-105-9-42-98-42 98-105 9 80 69-24 104Zm19 260h224 q-7 26-24 42 t-44 20 L228-85 q-33 5-59.5-15.5 T138-154 L85-591 q-4-33 16-59 t53-30 l46-6 v80 l-36 5 54 437 290-36 Zm-148-80 q-33 0-56.5-23.5 T280-360 v-440 q0-33 23.5-56.5 T360-880 h440 q33 0 56.5 23.5 T880-800 v440 q0 33-23.5 56.5 T800-280 H360 Zm0-80 h440 v-440 H360 v440 Z" />
+    </group>
+</vector>
