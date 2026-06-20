@@ -60,7 +60,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.shopnobilash.app.data.property.model.MeterType
+import com.shopnobilash.app.data.property.model.OfficeRoomType
 import com.shopnobilash.app.data.property.model.Property
+import com.shopnobilash.app.data.property.model.roomCountLabel
 import com.shopnobilash.app.presentation.components.AppTag
 import com.shopnobilash.app.presentation.components.AppAvatar
 import com.shopnobilash.app.presentation.components.AppText
@@ -297,13 +300,16 @@ private fun DetailContent(
                 // Meta pills
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     listOf(
-                        Triple(Icons.Filled.KingBed,  "${property.beds} bed",  "beds"),
+                        Triple(Icons.Filled.KingBed,  property.roomCountLabel,  "rooms"),
                         Triple(Icons.Filled.Bathtub,  "${property.baths} bath", "baths"),
                         Triple(Icons.Filled.SquareFoot, "${property.sqft} sqft", "area"),
                     ).forEach { (icon, label, _) ->
                         MetaPill(icon = icon, label = label, modifier = Modifier.weight(1f))
                     }
                 }
+
+                // Commercial details (Shop / Office) — shown only when present
+                CommercialDetails(property)
 
                 Spacer(Modifier.height(20.dp))
 
@@ -351,6 +357,37 @@ private fun DetailContent(
                 Spacer(Modifier.height(12.dp))
                 MapPlaceholder()
                 Spacer(Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommercialDetails(property: Property) {
+    val colors = MaterialTheme.appColors
+    val rows = buildList {
+        MeterType.fromRaw(property.meterType)?.let { add("Electricity" to it.label) }
+        OfficeRoomType.fromRaw(property.officeRoomType)?.let { add("Office space" to it.label) }
+        property.advanceAmount?.takeIf { it > 0 }?.let {
+            add("Advance / deposit" to "৳ ${"%,.0f".format(it)}")
+        }
+    }
+    if (rows.isEmpty()) return
+
+    Spacer(Modifier.height(20.dp))
+    AppText(
+        "Details",
+        style = MaterialTheme.typography.titleMedium.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 17.sp),
+    )
+    Spacer(Modifier.height(8.dp))
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        rows.forEach { (label, value) ->
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                AppText(label, style = MaterialTheme.typography.bodyMedium.copy(color = colors.muted))
+                AppText(
+                    value,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = colors.ink, fontWeight = FontWeight.SemiBold),
+                )
             }
         }
     }

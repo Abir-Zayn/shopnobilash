@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.shopnobilash.app.presentation.components.AppText
+import com.shopnobilash.app.data.property.model.MeterType
+import com.shopnobilash.app.data.property.model.OfficeRoomType
 import com.shopnobilash.app.data.property.model.PropertyCategory
 import com.shopnobilash.app.data.property.model.PropertyDraft
 import com.shopnobilash.app.presentation.components.AppTextField
@@ -72,6 +74,7 @@ fun AddPropertyScreen(
 
     var category by rememberSaveable { mutableStateOf<PropertyCategory?>(null) }
     var houseName by rememberSaveable { mutableStateOf("") }
+    var location by rememberSaveable { mutableStateOf("") }
     var floor by rememberSaveable { mutableStateOf("") }
     var bedNo by rememberSaveable { mutableStateOf("") }
     var bathNo by rememberSaveable { mutableStateOf("") }
@@ -79,6 +82,9 @@ fun AddPropertyScreen(
     var rent by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
     var contractTerms by rememberSaveable { mutableStateOf("") }
+    var meterType by rememberSaveable { mutableStateOf<MeterType?>(null) }
+    var officeRoomType by rememberSaveable { mutableStateOf<OfficeRoomType?>(null) }
+    var advanceAmount by rememberSaveable { mutableStateOf("") }
     val images = remember { mutableStateListOf<Uri>() }
     var photoLimitHit by remember { mutableStateOf(false) }
 
@@ -94,13 +100,23 @@ fun AddPropertyScreen(
     val bathVal = bathNo.toIntOrNull()
     val areaVal = areaSqft.toIntOrNull()
     val rentVal = rent.toDoubleOrNull()
+    val advanceVal = advanceAmount.toDoubleOrNull()
 
-    val valid = category != null &&
+    // Category drives field visibility + which extras are form-required.
+    val cat = category
+    val advanceRequired = cat?.showsAdvanceAmount == true
+    // Soft room-count hint — warn only, never block (an owner with 5 rooms is allowed).
+    val roomRange = cat?.roomRange
+    val roomOutOfRange = roomRange != null && bedVal != null && bedVal !in roomRange
+
+    val valid = cat != null &&
         houseName.trim().isNotEmpty() &&
-        bedVal != null && bedVal >= 0 &&
+        location.trim().isNotEmpty() &&
+        bedVal != null && bedVal >= 1 &&   // generic room count; min 1 (no `0` studio sentinel)
         bathVal != null && bathVal >= 0 &&
         areaVal != null && areaVal > 0 &&
         rentVal != null && rentVal > 0 &&
+        (!advanceRequired || (advanceVal != null && advanceVal >= 0)) &&
         images.isNotEmpty()
 
     val canSubmit = valid && !state.isSubmittingProperty
@@ -123,11 +139,18 @@ fun AddPropertyScreen(
         // Category
         SectionCard("Category") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PropertyCategory.entries.forEach { cat ->
+                // Showroom hidden from the listing form (still valid in DB / read path).
+                PropertyCategory.entries.filter { it != PropertyCategory.SHOWROOM }.forEach { cat ->
                     CategoryChip(
                         label = cat.rawValue,
                         selected = category == cat,
-                        onClick = { category = cat },
+                        onClick = {
+                            category = cat
+                            // Drop stale commercial inputs that the new category won't show.
+                            if (!cat.showsMeterType) meterType = null
+                            if (!cat.showsOfficeRoomType) officeRoomType = null
+                            if (!cat.showsAdvanceAmount) advanceAmount = ""
+                        },
                     )
                 }
             }
@@ -137,15 +160,22 @@ fun AddPropertyScreen(
         SectionCard("Basic Details") {
             FieldLabel("House Name *")
             AppTextField(value = houseName, onValueChange = { houseName = it }, placeholder = "e.g. Sherman Oaks", cornerRadius = 20.dp)
+            FieldLabel("Location *")
+            AppTextField(
+                value = location,
+                onValueChange = { location = it },
+                placeholder = "e.g. Halishahar, Chuna Factory, Chittagong",
+                cornerRadius = 20.dp,
+            )
             FieldLabel("Floor")
             AppTextField(value = floor, onValueChange = { floor = it }, placeholder = "e.g. 7A (optional)", cornerRadius = 20.dp)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    FieldLabel("Bedrooms *")
+                    FieldLabel("${cat?.roomLabel ?: "Rooms"} *")
                     AppTextField(
                         value = bedNo,
                         onValueChange = { bedNo = it.filter(Char::isDigit) },
-                        placeholder = "0",
+                        placeholder = "1",
                         keyboardType = KeyboardType.Number,
                         cornerRadius = 20.dp,
                     )
@@ -161,10 +191,12 @@ fun AddPropertyScreen(
                     )
                 }
             }
-            AppText(
-                "Enter 0 for a studio / open-plan unit.",
-                style = MaterialTheme.typography.labelSmall.copy(color = colors.faint),
-            )
+            if (roomOutOfRange && roomRange != null) {
+                AppText(
+                    "Most ${cat?.rawValue?.lowercase()} listings have ${roomRange.first}–${roomRange.last} rooms. You can still continue.",
+                    style = MaterialTheme.typography.labelSmall.copy(color = colors.faint),
+                )
+            }
             FieldLabel("Area (sqft) *")
             AppTextField(
                 value = areaSqft,
@@ -185,6 +217,52 @@ fun AddPropertyScreen(
                 keyboardType = KeyboardType.Decimal,
                 cornerRadius = 20.dp,
             )
+        }
+
+        // Category-specific commercial details (Shop / Office)
+        if (cat != null && (cat.showsMeterType || cat.showsOfficeRoomType || cat.showsAdvanceAmount)) {
+            SectionCard("Commercial Details") {
+                if (cat.showsMeterType) {
+                    FieldLabel("Electricity meter")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        MeterType.entries.forEach { mt ->
+                            CategoryChip(
+                                label = mt.label,
+                                selected = meterType == mt,
+                                onClick = { meterType = mt },
+                            )
+                        }
+                    }
+                }
+                if (cat.showsOfficeRoomType) {
+                    FieldLabel("Office space")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OfficeRoomType.entries.forEach { ort ->
+                            CategoryChip(
+                                label = ort.label,
+                                selected = officeRoomType == ort,
+                                onClick = { officeRoomType = ort },
+                            )
+                        }
+                    }
+                }
+                if (cat.showsAdvanceAmount) {
+                    FieldLabel("Advance / deposit required (amount) *")
+                    AppTextField(
+                        value = advanceAmount,
+                        onValueChange = { input -> advanceAmount = input.filter { it.isDigit() || it == '.' } },
+                        placeholder = "e.g. 50000",
+                        keyboardType = KeyboardType.Decimal,
+                        cornerRadius = 20.dp,
+                    )
+                    if (advanceRequired && advanceAmount.isNotBlank() && advanceVal == null) {
+                        AppText(
+                            "Enter a valid amount.",
+                            style = MaterialTheme.typography.labelSmall.copy(color = colors.danger),
+                        )
+                    }
+                }
+            }
         }
 
         // Description
@@ -271,16 +349,22 @@ fun AddPropertyScreen(
         PrimaryButton(
             text = "Complete Listing",
             onClick = {
+                val selected = category!!
                 val draft = PropertyDraft(
-                    category = category!!,
+                    category = selected,
                     houseName = houseName.trim(),
+                    location = location.trim().ifEmpty { null },
                     floor = floor.trim().ifEmpty { null },
-                    bedNo = bedVal ?: 0,
+                    bedNo = bedVal ?: 1,
                     bathNo = bathVal ?: 0,
                     areaSqft = areaVal ?: 0,
                     rent = rentVal ?: 0.0,
                     description = description.trim().ifEmpty { null },
                     contractTerms = contractTerms.trim().ifEmpty { null },
+                    // Only persist fields the selected category exposes.
+                    meterType = meterType.takeIf { selected.showsMeterType },
+                    officeRoomType = officeRoomType.takeIf { selected.showsOfficeRoomType },
+                    advanceAmount = advanceVal.takeIf { selected.showsAdvanceAmount },
                 )
                 viewModel.submitProperty(draft, images.toList(), context)
             },

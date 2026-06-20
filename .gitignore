@@ -79,6 +79,7 @@ docs/work-list.md
 docs/session-handoff.md
 docs/spec.md
 docs/work-template.md
+docs/category-specific-fields-plan.md
 
 # Appwrite Functions
 appwrite-functions/**/node_modules/
@@ -87,4 +88,4 @@ appwrite-functions/**/*.zip
 
 # Agent & Skills tracking
 .agents/
-skills-lock.json
+skills-lock.json

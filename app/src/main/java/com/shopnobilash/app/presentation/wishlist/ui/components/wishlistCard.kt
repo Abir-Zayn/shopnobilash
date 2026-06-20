@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.shopnobilash.app.data.property.model.Property
+import com.shopnobilash.app.data.property.model.roomCountLabel
 import com.shopnobilash.app.presentation.theme.appColors
 
 @Composable
@@ -106,7 +107,7 @@ fun WishlistCard(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        text = "${property.beds} Bed${if (property.beds > 1) "rooms" else "room"}",
+                        text = property.roomCountLabel,
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.muted,
                             fontWeight = FontWeight.SemiBold,

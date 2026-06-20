@@ -33,6 +33,7 @@ data class CreatedProperty(
     val rent: Double,
     val areaSqft: Int,
     val bedNo: Int,
+    val roomNoun: String,
     val firstImageUrl: String?,
 )
 
@@ -233,6 +234,7 @@ class OwnerDashboardViewModel(
                                 rent = draft.rent,
                                 areaSqft = draft.areaSqft,
                                 bedNo = draft.bedNo,
+                                roomNoun = draft.category.roomNoun,
                                 firstImageUrl = urls.firstOrNull(),
                             ),
                         )

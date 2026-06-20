@@ -88,10 +88,13 @@ Stores property listing details, availability, and media.
 | `$id` | string | auto | Primary Key | Appwrite auto-generated ID |
 | `house_name` | string(255) | ✅ | — | Display name of property |
 | `location` | string(255) | ❌ | — | Address / location text of the property |
-| `bed_no` | integer | ✅ | — | Number of bedrooms |
-| `bath_no` | integer | ✅ | — | Number of bathrooms |
+| `bed_no` | integer | ✅ | — | **Generic room count** (not literally bedrooms). UI label varies by category: "Bedrooms" (House) / "Rooms" (Shop, Office, Coaching). Column NOT renamed — relabel in UI only. See [Generic room count](#bed_no--generic-room-count). |
+| `bath_no` | integer | ✅ | — | Number of bathrooms. Universal across all categories. |
 | `area_sqft` | integer | ✅ | — | Total area in square feet |
 | `rent` | float (double) | ✅ | — | Monthly rent amount |
+| `meter_type` | enum | ❌ | `Commercial`, `SubMeter` | Nullable. Electricity meter type for commercial listings (Shop). Null for residential. |
+| `office_room_type` | enum | ❌ | `Private`, `Shared` | Nullable. Private office vs shared / co-working. Office category only. Null otherwise. |
+| `advance_amount` | float (double) | ❌ | min: 0 | Nullable. **Listing-level advance the owner advertises/asks.** Shop + Office share this column. Schema nullable (residential = null) but **form-required for Shop / Office**. NOT the same as `bookings.advance_payment` — see [distinction](#advance_amount-vs-bookingsadvance_payment). |
 | `status` | enum | ❌ | Default: `Available` | See allowed values below |
 | `contract_terms` | string(65535) | ❌ | — | Rental contract text |
 | `description` | string(65535) | ❌ | — | Property description |
@@ -118,6 +121,63 @@ Stores property listing details, availability, and media.
 | `Available` | Property open for rent (default) |
 | `Rented` | Currently occupied |
 | `Maintenance` | Temporarily unavailable |
+
+### `bed_no` — Generic Room Count
+
+`bed_no` is a **category-agnostic room count**, not literally bedrooms. Every
+category has rooms (a 1-room shop = `bed_no = 1`). The column was NOT renamed —
+renaming breaks existing Kotlin code and queries. Relabel in the UI only:
+
+| Category | UI label | Typical range (soft hint) |
+|---|---|---|
+| `House` | "Bedrooms" | — |
+| `Coaching` | "Rooms" | 1–4 |
+| `Office` | "Rooms" | 1–4 |
+| `Shop` | "Rooms" | 1–2 |
+
+- Range caps are **soft warnings, not hard rejects** — an owner with 5 rooms must
+  not be blocked.
+- **No `0` studio sentinel.** The old "`bed_no = 0` = studio/open-plan" hack is
+  dead. Studios write `bed_no = 1` so `0` never carries hidden meaning. (Audit on
+  2026-06-21 found zero rows with `bed_no = 0`, so no backfill was needed.)
+
+### Category-Specific Field Visibility
+
+The Kotlin listing form drives labels + visible fields off a single
+`when(property_category)`. Validation lives in the form, NOT the schema:
+
+| Category | Visible commercial fields | Form-required |
+|---|---|---|
+| `House` | none | — |
+| `Coaching` | none | — |
+| `Office` | `office_room_type`, `advance_amount` | `advance_amount` |
+| `Shop` | `meter_type`, `advance_amount` | `advance_amount` |
+
+Hidden fields emit `null` in the create/update payload. `advance_amount` is
+schema-nullable (residential rows = null) but the form blocks submit when empty
+for Shop / Office.
+
+**User-facing labels** (owners/renters never see raw field names):
+
+| Raw field | User-facing label |
+|---|---|
+| `meter_type` | "Electricity: Own dedicated meter / Shared meter (billed by landlord)" |
+| `office_room_type` | "Private office or Shared / co-working space?" |
+| `advance_amount` | "Advance / deposit required (amount)" |
+
+> Drop "sub-meter" from user text — meaningless to a normal user. The `SubMeter`
+> enum value maps to the "Shared meter (billed by landlord)" label.
+
+### `advance_amount` vs `bookings.advance_payment`
+
+**NOT duplicates** — different lifecycle, different table:
+
+- `properties.advance_amount` = the advance the **owner advertises/asks** on the
+  listing (sticker number, set at listing time).
+- `bookings.advance_payment` = the advance **actually agreed/paid** for a specific
+  contract (set at booking time).
+
+Do not collapse them.
 
 ---
 
@@ -372,7 +432,8 @@ const val TABLE_BOOKINGS         = "bookings"
 
 ## Notes
 
-- Appwrite does not support `required = true` with a `default` value on the same column. `bed_no` and `bath_no` are required — app code must always supply a value (use `0` for studio/open-plan).
+- Appwrite does not support `required = true` with a `default` value on the same column. `bed_no` and `bath_no` are required — app code must always supply a value (≥1). `bed_no` is a generic room count; studios write `1`, never `0`.
+- `meter_type`, `office_room_type`, `advance_amount` are **additive nullable** columns (added 2026-06-21). Existing rows backfill `null` automatically — no migration script. No indexes added yet: search filtering on these fields is an open question; add indexes only when a filter/sort path needs them.
 - `property_img` is stored as a string array; each entry is a URL (max 2048 chars). Order is preserved as inserted.
 - `tin_certificate_no` uniqueness is enforced via the `idx_tin_unique` index, not a DB constraint — handle duplicate errors (`409`) in app code.
 - `$createdAt` / `$updatedAt` are Appwrite system fields on every document and can supplement `created_at` / `updated_on` if needed.

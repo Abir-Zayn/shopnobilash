@@ -106,7 +106,7 @@ fun PropertyCreatedScreen(
                         ),
                     )
                     AppText(
-                        "\$${"%,.0f".format(created.rent)}/mo · ${created.areaSqft} sqft · ${created.bedNo} bd",
+                        "৳${"%,.0f".format(created.rent)}/mo · ${created.areaSqft} sqft · ${created.bedNo} ${created.roomNoun.lowercase()}${if (created.bedNo == 1) "" else "s"}",
                         style = MaterialTheme.typography.bodySmall.copy(color = colors.muted, fontSize = 13.sp),
                     )
                 }

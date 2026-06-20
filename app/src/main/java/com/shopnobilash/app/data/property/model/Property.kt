@@ -17,6 +17,23 @@ data class Property(
     val description: String,
     val imageUrl: String,
     val imageUrls: List<String> = emptyList(),
+    val meterType: String? = null,
+    val officeRoomType: String? = null,
+    val advanceAmount: Double? = null,
 )
 
 fun formatPrice(price: Int): String = "\$${"%,d".format(price)}"
+
+/** Resolved category, or null if the raw value is unknown. */
+val Property.category: PropertyCategory?
+    get() = PropertyCategory.fromRaw(type)
+
+/**
+ * Read-path room label honoring the `bed_no` reframe — "3 Bedrooms" for a House,
+ * "2 Rooms" for Shop/Office/Coaching/Showroom.
+ */
+val Property.roomCountLabel: String
+    get() {
+        val noun = category?.roomNoun ?: "Room"
+        return "$beds $noun${if (beds == 1) "" else "s"}"
+    }

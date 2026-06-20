@@ -239,6 +239,9 @@ class PropertyRepositoryImpl(
         description = this["description"] as? String ?: "",
         imageUrl = (this["property_img"] as? List<*>)?.firstOrNull() as? String ?: "",
         imageUrls = (this["property_img"] as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+        meterType = this["meter_type"] as? String,
+        officeRoomType = this["office_room_type"] as? String,
+        advanceAmount = (this["advance_amount"] as? Number)?.toDouble(),
     )
 
     override suspend fun createProperty(
@@ -266,6 +269,10 @@ class PropertyRepositoryImpl(
                     draft.floor?.takeIf { it.isNotBlank() }?.let { put("floor", it) }
                     draft.description?.takeIf { it.isNotBlank() }?.let { put("description", it) }
                     draft.contractTerms?.takeIf { it.isNotBlank() }?.let { put("contract_terms", it) }
+                    // Category-specific commercial fields — omitted (null) for residential.
+                    draft.meterType?.let { put("meter_type", it.rawValue) }
+                    draft.officeRoomType?.let { put("office_room_type", it.rawValue) }
+                    draft.advanceAmount?.let { put("advance_amount", it) }
                     if (imageUrls.isNotEmpty()) put("property_img", imageUrls)
                     put("ads_created_on", now)
                     put("updated_on", now)
