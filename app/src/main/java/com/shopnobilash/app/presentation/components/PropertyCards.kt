@@ -108,7 +108,7 @@ fun PropertyCardVertical(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
                 Text(
                     text = property.title,
@@ -117,7 +117,8 @@ fun PropertyCardVertical(
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp,
                     ),
-                    maxLines = 1,
+                    minLines = 2,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
@@ -133,7 +134,7 @@ fun PropertyCardVertical(
             }
             Spacer(Modifier.height(8.dp))
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(
@@ -150,6 +151,7 @@ fun PropertyCardVertical(
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.5.sp,
                     ),
+                    minLines = 2,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
@@ -287,7 +289,7 @@ fun PropertyCardHorizontal(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
                 Text(
                     text = property.title,
@@ -296,7 +298,8 @@ fun PropertyCardHorizontal(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                     ),
-                    maxLines = 1,
+                    minLines = 2,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
@@ -312,7 +315,7 @@ fun PropertyCardHorizontal(
             }
             Spacer(Modifier.height(8.dp))
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(
@@ -329,6 +332,7 @@ fun PropertyCardHorizontal(
                         fontWeight = FontWeight.Normal,
                         fontSize = 14.sp,
                     ),
+                    minLines = 2,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),

@@ -46,18 +46,29 @@ fun PropertyCardShimmer(
 
         Spacer(Modifier.height(12.dp))
 
-        // Title placeholder row
+        // Title placeholder row (2 lines, matches PropertyCardVertical)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
-            ShimmerBox(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(18.dp)
-                    .clip(RoundedCornerShape(6.dp)),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+            }
             Spacer(Modifier.width(8.dp))
             ShimmerBox(
                 modifier = Modifier
@@ -68,9 +79,9 @@ fun PropertyCardShimmer(
 
         Spacer(Modifier.height(8.dp))
 
-        // Location placeholder row
+        // Location placeholder row (2 lines, matches PropertyCardVertical)
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
             modifier = Modifier.fillMaxWidth(),
         ) {
             ShimmerBox(
@@ -79,12 +90,23 @@ fun PropertyCardShimmer(
                     .clip(RoundedCornerShape(4.dp)),
             )
             Spacer(Modifier.width(6.dp))
-            ShimmerBox(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(6.dp)),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+            }
         }
 
         Spacer(Modifier.height(14.dp))
@@ -142,18 +164,29 @@ fun PropertyCardHorizontalShimmer(
 
         Spacer(Modifier.height(12.dp))
 
-        // Title placeholder row
+        // Title placeholder row (2 lines, matches PropertyCardHorizontal)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
         ) {
-            ShimmerBox(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(20.dp)
-                    .clip(RoundedCornerShape(6.dp)),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(20.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(20.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+            }
             Spacer(Modifier.width(8.dp))
             ShimmerBox(
                 modifier = Modifier
@@ -164,9 +197,9 @@ fun PropertyCardHorizontalShimmer(
 
         Spacer(Modifier.height(8.dp))
 
-        // Location placeholder row
+        // Location placeholder row (2 lines, matches PropertyCardHorizontal)
         Row(
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.Top,
             modifier = Modifier.fillMaxWidth(),
         ) {
             ShimmerBox(
@@ -175,12 +208,23 @@ fun PropertyCardHorizontalShimmer(
                     .clip(RoundedCornerShape(4.dp)),
             )
             Spacer(Modifier.width(6.dp))
-            ShimmerBox(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .height(14.dp)
-                    .clip(RoundedCornerShape(6.dp)),
-            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(14.dp)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+            }
         }
 
         Spacer(Modifier.height(14.dp))
