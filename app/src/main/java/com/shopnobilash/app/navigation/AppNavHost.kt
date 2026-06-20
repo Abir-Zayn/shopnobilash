@@ -25,6 +25,8 @@ import com.shopnobilash.app.presentation.home.ui.HomeScreen
 import com.shopnobilash.app.presentation.listing.ui.NewlyAddedScreen
 import com.shopnobilash.app.presentation.notifications.ui.NotificationsScreen
 import com.shopnobilash.app.presentation.onboarding.ui.SplashScreen
+import com.shopnobilash.app.data.property.model.PropertyCategory
+import com.shopnobilash.app.presentation.search.ui.SearchScreen
 import com.shopnobilash.app.presentation.owner.ui.OwnerDashboardScreen
 import com.shopnobilash.app.presentation.profile.ui.ProfileScreen
 import com.shopnobilash.app.presentation.profile.viewmodel.ProfileViewModel
@@ -141,7 +143,21 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                 onNavigateToDetail = { id -> navController.navigate(Screen.Detail.createRoute(id)) },
                 onNavigateToNewlyAdded = { navController.navigate(Screen.NewlyAdded.route) },
                 onNavigateToNotifications = { navController.navigate(Screen.Notifications.route) },
+                onNavigateToSearch = { category -> navController.navigate(Screen.Search.createRoute(category)) },
                 onNavigateToTab = { tab -> navController.navigate(tab) { popUpTo(Screen.Home.route) { inclusive = false } } },
+            )
+        }
+        composable(
+            route = Screen.Search.route,
+            arguments = listOf(
+                navArgument("category") { type = NavType.StringType; nullable = true; defaultValue = null },
+            ),
+        ) { backStackEntry ->
+            val rawCategory = backStackEntry.arguments?.getString("category")
+            SearchScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToDetail = { id -> navController.navigate(Screen.Detail.createRoute(id)) },
+                initialCategory = PropertyCategory.fromRaw(rawCategory),
             )
         }
         composable(Screen.NewlyAdded.route) {

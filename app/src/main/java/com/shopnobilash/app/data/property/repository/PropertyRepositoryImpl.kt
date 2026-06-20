@@ -5,10 +5,16 @@ import com.shopnobilash.app.constants.TABLE_PROPERTIES
 import com.shopnobilash.app.constants.TABLE_PROPERTY_OWNERS
 import com.shopnobilash.app.constants.TABLE_OWNERS
 import com.shopnobilash.app.constants.TABLE_WISHLIST
+import com.shopnobilash.app.constants.SearchConfig
 import com.shopnobilash.app.data.property.model.Property
 import com.shopnobilash.app.data.property.model.PropertyDraft
+import com.shopnobilash.app.data.property.model.PropertyFilter
+import com.shopnobilash.app.data.property.model.PropertyPage
 import com.shopnobilash.app.data.property.model.PropertyStatus
+import com.shopnobilash.app.data.property.model.SearchError
+import com.shopnobilash.app.data.property.model.SearchException
 import io.appwrite.ID
+import io.appwrite.exceptions.AppwriteException
 import io.appwrite.Permission
 import io.appwrite.Query
 import io.appwrite.Role
@@ -23,7 +29,10 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.io.IOException
+import java.net.UnknownHostException
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class PropertyRepositoryImpl(
     private val databases: Databases,
@@ -169,6 +178,50 @@ class PropertyRepositoryImpl(
                 data.toProperty(doc.id)
             }
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override suspend fun searchProperties(filter: PropertyFilter): Result<PropertyPage> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val queries = buildList {
+                    filter.category?.let { add(Query.equal("property_category", it.rawValue)) }
+                    filter.minRent?.let { add(Query.greaterThanEqual("rent", it)) }
+                    filter.maxRent?.let { add(Query.lessThanEqual("rent", it)) }
+                    filter.minArea?.let { add(Query.greaterThanEqual("area_sqft", it)) }
+                    filter.maxArea?.let { add(Query.lessThanEqual("area_sqft", it)) }
+                    if (filter.bathrooms.isNotEmpty()) add(Query.equal("bath_no", filter.bathrooms.sorted()))
+                    if (filter.bedrooms.isNotEmpty()) add(Query.equal("bed_no", filter.bedrooms.sorted()))
+                    if (filter.newlyAdded) {
+                        val cutoff = Instant.now()
+                            .minus(SearchConfig.NEWLY_ADDED_WINDOW_DAYS, ChronoUnit.DAYS)
+                            .toString()
+                        add(Query.greaterThanEqual("ads_created_on", cutoff))
+                    }
+                    // Name match via the `house_name` fulltext index (no client fallback).
+                    filter.query.trim().takeIf { it.isNotEmpty() }?.let { add(Query.search("house_name", it)) }
+                    add(Query.orderDesc("ads_created_on"))
+                    add(Query.limit(SearchConfig.SEARCH_PAGE_SIZE))
+                }
+
+                val docs = databases.listDocuments(
+                    databaseId = PROPERTY_DATABASE_ID,
+                    collectionId = TABLE_PROPERTIES,
+                    queries = queries,
+                )
+                PropertyPage(
+                    items = docs.documents.map { doc -> (doc.data as Map<String, Any>).toProperty(doc.id) },
+                    total = docs.total,
+                )
+            }.recoverCatching { throw SearchException(it.toSearchError()) }
+        }
+
+    /** Map raw failures to a typed [SearchError] the UI can act on. */
+    private fun Throwable.toSearchError(): SearchError = when {
+        this is UnknownHostException || this is IOException -> SearchError.Network
+        this is AppwriteException && (type?.contains("index", ignoreCase = true) == true ||
+            message?.contains("index", ignoreCase = true) == true) -> SearchError.MissingIndex
+        else -> SearchError.Unknown(this)
     }
 
     @Suppress("UNCHECKED_CAST")

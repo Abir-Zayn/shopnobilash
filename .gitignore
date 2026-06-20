@@ -80,6 +80,8 @@ docs/session-handoff.md
 docs/spec.md
 docs/work-template.md
 docs/category-specific-fields-plan.md
+docs/search-filter-architecture.md
+
 
 # Appwrite Functions
 appwrite-functions/**/node_modules/

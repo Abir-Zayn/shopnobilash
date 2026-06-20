@@ -12,6 +12,11 @@ sealed class Screen(val route: String) {
     }
     object Home         : Screen("home")
     object NewlyAdded   : Screen("newly_added")
+    object Search : Screen("search?category={category}") {
+        /** [category] is a `PropertyCategory.rawValue`; null opens search with no badge selected. */
+        fun createRoute(category: String? = null) =
+            if (category.isNullOrBlank()) "search?category=" else "search?category=${Uri.encode(category)}"
+    }
     object Wishlist     : Screen("wishlist")
     object Chat         : Screen("chat")
     object Profile      : Screen("profile")

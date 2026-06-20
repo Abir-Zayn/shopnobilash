@@ -23,10 +23,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Apartment
-import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.shopnobilash.app.data.property.model.PropertyCategory
 import com.shopnobilash.app.presentation.components.BottomNavBar
 import com.shopnobilash.app.presentation.components.PropertyCardHorizontal
 import com.shopnobilash.app.presentation.components.PropertyCardVertical
@@ -58,14 +59,15 @@ import com.shopnobilash.app.presentation.theme.Accent
 import com.shopnobilash.app.presentation.theme.appColors
 import org.koin.androidx.compose.koinViewModel
 
-data class Category(val id: String, val icon: ImageVector, val label: String)
+data class Category(val category: PropertyCategory, val icon: ImageVector, val label: String) {
+    val id: String get() = category.rawValue
+}
 
 val CATEGORIES = listOf(
-    Category("house",     Icons.Filled.Home,          "House"),
-    Category("villa",     Icons.Filled.Business,      "Villa"),
-    Category("apartment", Icons.Filled.Apartment,     "Apartment"),
-    Category("office",    Icons.Filled.Business,      "Office"),
-    Category("studio",    Icons.Filled.Hotel,          "Studio"),
+    Category(PropertyCategory.HOUSE,    Icons.Filled.Home,       "House"),
+    Category(PropertyCategory.OFFICE,   Icons.Filled.Business,   "Office"),
+    Category(PropertyCategory.COACHING, Icons.Filled.School,     "Coaching"),
+    Category(PropertyCategory.SHOP,     Icons.Filled.Storefront, "Shop"),
 )
 
 @Composable
@@ -73,6 +75,7 @@ fun HomeScreen(
     onNavigateToDetail: (String) -> Unit,
     onNavigateToNewlyAdded: () -> Unit,
     onNavigateToNotifications: () -> Unit,
+    onNavigateToSearch: (String?) -> Unit,
     onNavigateToTab: (String) -> Unit,
     viewModel: HomeViewModel = koinViewModel(),
 ) {
@@ -141,19 +144,20 @@ fun HomeScreen(
                             .shadow(4.dp, RoundedCornerShape(15.dp))
                             .clip(RoundedCornerShape(15.dp))
                             .background(colors.card)
+                            .clickable { onNavigateToSearch(null) }
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Icon(Icons.Filled.Search, null, tint = colors.muted, modifier = Modifier.size(20.dp))
-                        Text("Search location, type…", style = MaterialTheme.typography.bodyMedium.copy(color = colors.faint, fontSize = 14.5.sp))
+                        Text("Search by property name…", style = MaterialTheme.typography.bodyMedium.copy(color = colors.faint, fontSize = 14.5.sp))
                     }
                     Box(
                         modifier = Modifier
                             .size(52.dp)
                             .clip(RoundedCornerShape(15.dp))
                             .background(Accent)
-                            .clickable { },
+                            .clickable { onNavigateToSearch(null) },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(Icons.Filled.Tune, null, tint = Color.White, modifier = Modifier.size(22.dp))
@@ -181,7 +185,7 @@ fun HomeScreen(
                                 .shadow(if (on) 6.dp else 4.dp, RoundedCornerShape(13.dp))
                                 .clip(RoundedCornerShape(13.dp))
                                 .background(if (on) Accent else colors.card)
-                                .clickable { viewModel.setCategory(cat.id) }
+                                .clickable { onNavigateToSearch(cat.id) }
                                 .padding(horizontal = 18.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp),

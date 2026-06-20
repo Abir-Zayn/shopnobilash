@@ -19,6 +19,7 @@ import com.shopnobilash.app.domain.property.usecase.CreatePropertyUseCase
 import com.shopnobilash.app.domain.property.usecase.GetListingsUseCase
 import com.shopnobilash.app.domain.property.usecase.GetPropertyByIdUseCase
 import com.shopnobilash.app.domain.property.usecase.GetSavedPropertyIdsUseCase
+import com.shopnobilash.app.domain.property.usecase.SearchPropertiesUseCase
 import com.shopnobilash.app.domain.property.usecase.ToggleSavePropertyUseCase
 import com.shopnobilash.app.presentation.auth.viewmodel.AuthViewModel
 import com.shopnobilash.app.presentation.chat.viewmodel.ChatViewModel
@@ -30,6 +31,7 @@ import com.shopnobilash.app.presentation.notifications.viewmodel.NotificationsVi
 import com.shopnobilash.app.presentation.owner.viewmodel.OwnerDashboardViewModel
 import com.shopnobilash.app.presentation.profile.viewmodel.ProfileViewModel
 import com.shopnobilash.app.presentation.profile_setup.viewmodel.ProfileSetupViewModel
+import com.shopnobilash.app.presentation.search.viewmodel.SearchViewModel
 import com.shopnobilash.app.presentation.verification.viewmodel.VerificationViewModel
 import com.shopnobilash.app.presentation.wishlist.viewmodel.WishlistViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -64,6 +66,7 @@ val useCaseModule = module {
     factory { ToggleSavePropertyUseCase(get()) }
     factory { GetSavedPropertyIdsUseCase(get()) }
     factory { CreatePropertyUseCase(get()) }
+    factory { SearchPropertiesUseCase(get()) }
 
     // Owner
     factory { ResolveOwnerUseCase(get()) }
@@ -74,6 +77,7 @@ val appModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::HomeViewModel)
     viewModelOf(::ListingViewModel)
+    viewModelOf(::SearchViewModel)
     viewModelOf(::WishlistViewModel)
     viewModelOf(::NotificationsViewModel)
     viewModelOf(::ProfileSetupViewModel)
