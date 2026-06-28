@@ -16,8 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Bathtub
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.KingBed
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.SquareFoot
@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.shopnobilash.app.data.property.model.Property
-import com.shopnobilash.app.data.property.model.roomCountLabel
 import com.shopnobilash.app.presentation.theme.appColors
 
 @Composable
@@ -160,7 +159,7 @@ fun PropertyCardVertical(
             Spacer(Modifier.height(14.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
@@ -174,7 +173,7 @@ fun PropertyCardVertical(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        text = property.roomCountLabel,
+                        text = "${property.beds}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.muted,
                             fontWeight = FontWeight.SemiBold,
@@ -193,7 +192,7 @@ fun PropertyCardVertical(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        text = "${property.baths} Bath${if (property.baths > 1) "s" else ""}",
+                        text = "${property.baths}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.muted,
                             fontWeight = FontWeight.SemiBold,
@@ -212,7 +211,7 @@ fun PropertyCardVertical(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        text = "${"%,d".format(property.sqft)} sqft",
+                        text = "${"%,d".format(property.sqft)}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.muted,
                             fontWeight = FontWeight.SemiBold,
@@ -341,7 +340,7 @@ fun PropertyCardHorizontal(
             Spacer(Modifier.height(14.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
@@ -355,7 +354,7 @@ fun PropertyCardHorizontal(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        text = property.roomCountLabel,
+                        text = "${property.beds}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.muted,
                             fontWeight = FontWeight.SemiBold,
@@ -374,7 +373,7 @@ fun PropertyCardHorizontal(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        text = "${property.baths} Bath${if (property.baths > 1) "s" else ""}",
+                        text = "${property.baths}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.muted,
                             fontWeight = FontWeight.SemiBold,
@@ -393,7 +392,7 @@ fun PropertyCardHorizontal(
                         modifier = Modifier.size(16.dp),
                     )
                     Text(
-                        text = "${"%,d".format(property.sqft)} sqft",
+                        text = "${"%,d".format(property.sqft)}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = colors.muted,
                             fontWeight = FontWeight.SemiBold,

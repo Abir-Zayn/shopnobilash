@@ -1,5 +1,6 @@
 package com.shopnobilash.app.presentation.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -10,6 +11,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -56,5 +58,35 @@ fun PrimaryButton(
                 style = MaterialTheme.typography.titleMedium.copy(color = Color.White, fontWeight = FontWeight.Bold),
             )
         }
+    }
+}
+
+@Composable
+fun SecondaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    cornerRadius: Dp = 16.dp,
+) {
+    val colors = MaterialTheme.appColors
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(cornerRadius),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.accent),
+        border = BorderStroke(1.5.dp, colors.accent),
+        enabled = enabled,
+    ) {
+        if (icon != null) {
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.padding(end = 8.dp))
+        }
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium.copy(color = colors.accent, fontWeight = FontWeight.Bold),
+        )
     }
 }

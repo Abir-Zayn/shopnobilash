@@ -114,7 +114,7 @@ fun PropertyCardShimmer(
         // Meta placeholder (Beds / Baths / Sqft)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             repeat(3) {
@@ -232,7 +232,7 @@ fun PropertyCardHorizontalShimmer(
         // Meta placeholder row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             repeat(3) {

@@ -23,14 +23,13 @@ class CheckoutViewModel(
     private val _uiState = MutableStateFlow<CheckoutUiState>(CheckoutUiState.Loading)
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
 
-    private val _selectedTerm = MutableStateFlow(12)
-    val selectedTerm: StateFlow<Int> = _selectedTerm.asStateFlow()
+    /** Contract length in years — drives Total Pay = monthlyRent * 12 * years. */
+    private val _selectedYears = MutableStateFlow(1)
+    val selectedYears: StateFlow<Int> = _selectedYears.asStateFlow()
 
-    private val _selectedPayment = MutableStateFlow("visa")
-    val selectedPayment: StateFlow<String> = _selectedPayment.asStateFlow()
-
-    private val _bookingDone = MutableStateFlow(false)
-    val bookingDone: StateFlow<Boolean> = _bookingDone.asStateFlow()
+    /** Chosen move-in date as UTC epoch millis (matches Material3 DatePicker), null until picked. */
+    private val _moveInDateMillis = MutableStateFlow<Long?>(null)
+    val moveInDateMillis: StateFlow<Long?> = _moveInDateMillis.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -40,8 +39,6 @@ class CheckoutViewModel(
         }
     }
 
-    fun selectTerm(months: Int) { _selectedTerm.value = months }
-    fun selectPayment(id: String) { _selectedPayment.value = id }
-    fun confirmBooking() { _bookingDone.value = true }
-    fun dismissConfirmation() { _bookingDone.value = false }
+    fun selectYears(years: Int) { _selectedYears.value = years }
+    fun setMoveInDate(millis: Long?) { _moveInDateMillis.value = millis }
 }

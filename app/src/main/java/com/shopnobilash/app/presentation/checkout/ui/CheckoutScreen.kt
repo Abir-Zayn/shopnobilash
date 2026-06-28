@@ -2,12 +2,16 @@ package com.shopnobilash.app.presentation.checkout.ui
 import com.shopnobilash.app.presentation.checkout.viewmodel.CheckoutViewModel
 import com.shopnobilash.app.presentation.checkout.viewmodel.CheckoutUiState
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,37 +19,42 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -54,6 +63,7 @@ import com.shopnobilash.app.data.property.model.formatPrice
 import com.shopnobilash.app.presentation.components.AppTag
 import com.shopnobilash.app.presentation.components.PriceText
 import com.shopnobilash.app.presentation.components.PrimaryButton
+import com.shopnobilash.app.presentation.components.SecondaryButton
 import com.shopnobilash.app.presentation.components.StackHeader
 import com.shopnobilash.app.presentation.theme.Accent
 import com.shopnobilash.app.presentation.theme.AccentDeep
@@ -61,15 +71,17 @@ import com.shopnobilash.app.presentation.theme.AccentSoft
 import com.shopnobilash.app.presentation.theme.appColors
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
-data class PaymentMethod(val id: String, val label: String, val sub: String, val icon: ImageVector, val tint: Color)
+/** Width past which we switch to the two-pane (tablet / landscape) layout. */
+private val WideThreshold = 600.dp
+private val LEASE_YEARS = listOf(1, 2, 3)
+private val moveInFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy")
 
-val PAYMENT_METHODS = listOf(
-    PaymentMethod("visa",   "Visa",           "•••• 4921",    Icons.Filled.CreditCard,          Color(0xFF1A1F71)),
-    PaymentMethod("mc",     "Mastercard",     "•••• 8830",    Icons.Filled.CreditCard,          Color(0xFFEB601B)),
-    PaymentMethod("wallet", "DORent Wallet",  "Balance \$5,400", Icons.Filled.AccountBalanceWallet, Accent),
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(
     propertyId: String,
@@ -79,10 +91,10 @@ fun CheckoutScreen(
     viewModel: CheckoutViewModel = koinViewModel { parametersOf(propertyId) },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val selectedTerm by viewModel.selectedTerm.collectAsStateWithLifecycle()
-    val selectedPayment by viewModel.selectedPayment.collectAsStateWithLifecycle()
-    val bookingDone by viewModel.bookingDone.collectAsStateWithLifecycle()
+    val selectedYears by viewModel.selectedYears.collectAsStateWithLifecycle()
+    val moveInMillis by viewModel.moveInDateMillis.collectAsStateWithLifecycle()
     val colors = MaterialTheme.appColors
+    val context = LocalContext.current
 
     when (val state = uiState) {
         is CheckoutUiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -91,159 +103,239 @@ fun CheckoutScreen(
         is CheckoutUiState.Error -> Text(state.message, modifier = Modifier.padding(18.dp), color = colors.danger)
         is CheckoutUiState.Success -> {
             val property = state.property
-            val service = 120
-            val deposit = property.price
-            val total = property.price + service + deposit
+            var showDatePicker by remember { mutableStateOf(false) }
+
+            val moveInDate = moveInMillis?.let {
+                Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
+            }
+            val moveInLabel = moveInDate?.format(moveInFormatter) ?: "Select date"
+            val durationLabel = moveInDate?.let { start ->
+                val end = start.plusYears(selectedYears.toLong())
+                "${start.format(moveInFormatter)} → ${end.format(moveInFormatter)}"
+            }
+
+            val onCall: () -> Unit = {
+                // Owner phone is not yet part of the data model — opens the dialer ready for input.
+                context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:")))
+            }
 
             Scaffold(
                 containerColor = colors.bg,
                 topBar = { StackHeader(title = "Checkout", onBack = onBack) },
-                bottomBar = {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(colors.card)
-                            .padding(horizontal = 18.dp, vertical = 14.dp)
-                            .padding(bottom = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                    ) {
-                        Column {
-                            Text("Due today", style = MaterialTheme.typography.bodySmall.copy(color = colors.muted))
-                            Text(formatPrice(total), style = MaterialTheme.typography.headlineSmall.copy(color = colors.ink, fontWeight = FontWeight.ExtraBold, fontSize = 21.sp))
-                        }
-                        PrimaryButton(
-                            text = "Confirm & Pay",
-                            onClick = { viewModel.confirmBooking() },
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Filled.Lock,
-                        )
-                    }
-                },
             ) { innerPadding ->
-                LazyColumn(
+                BoxWithConstraints(
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
-                    item { Spacer(Modifier.height(8.dp)) }
-                    item { PropertySummaryCard(property) }
-                    item { Spacer(Modifier.height(22.dp)) }
+                    val wide = maxWidth >= WideThreshold
 
-                    item {
-                        Text("Booking details", style = MaterialTheme.typography.titleMedium.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 16.sp))
-                        Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            BookingDetailCard("Move-in", "Jul 1, 2026", Icons.Filled.CalendarMonth, Modifier.weight(1f))
-                            BookingDetailCard("Lease term", "$selectedTerm months", Icons.Filled.Shield, Modifier.weight(1f))
+                    if (wide) {
+                        // Two-pane: details on the left, sticky cost + actions on the right.
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 24.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1.4f)
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(22.dp),
+                            ) {
+                                PropertySummaryCard(property)
+                                BookingDetailsSection(
+                                    selectedYears = selectedYears,
+                                    moveInLabel = moveInLabel,
+                                    durationLabel = durationLabel,
+                                    onMoveInClick = { showDatePicker = true },
+                                    onSelectYears = viewModel::selectYears,
+                                )
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .widthIn(max = 360.dp)
+                                    .verticalScroll(rememberScrollState()),
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                            ) {
+                                DueTodayCard(property, selectedYears)
+                                CallMeetActions(onCall = onCall, onMeet = onMessageOwner)
+                            }
                         }
-                        Spacer(Modifier.height(14.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf(6, 12, 24).forEach { term ->
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(42.dp)
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(if (selectedTerm == term) AccentSoft else colors.card)
-                                        .border(1.5.dp, if (selectedTerm == term) Accent else colors.line2, RoundedCornerShape(12.dp))
-                                        .clickable { viewModel.selectTerm(term) },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text("$term mo", style = MaterialTheme.typography.labelLarge.copy(color = if (selectedTerm == term) AccentDeep else colors.ink2, fontWeight = FontWeight.Bold))
+                    } else {
+                        // Compact: single scroll column with the actions pinned to the bottom.
+                        Column(Modifier.fillMaxSize()) {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f).fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 4.dp),
+                            ) {
+                                item { Spacer(Modifier.height(8.dp)) }
+                                item { PropertySummaryCard(property) }
+                                item { Spacer(Modifier.height(22.dp)) }
+                                item {
+                                    BookingDetailsSection(
+                                        selectedYears = selectedYears,
+                                        moveInLabel = moveInLabel,
+                                        durationLabel = durationLabel,
+                                        onMoveInClick = { showDatePicker = true },
+                                        onSelectYears = viewModel::selectYears,
+                                    )
+                                    Spacer(Modifier.height(22.dp))
+                                }
+                                item {
+                                    DueTodayCard(property, selectedYears)
+                                    Spacer(Modifier.height(16.dp))
                                 }
                             }
-                        }
-                        Spacer(Modifier.height(24.dp))
-                    }
-
-                    item {
-                        Text("Payment method", style = MaterialTheme.typography.titleMedium.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 16.sp))
-                        Spacer(Modifier.height(12.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            PAYMENT_METHODS.forEach { method ->
-                                PaymentMethodRow(method, selectedPayment == method.id) { viewModel.selectPayment(method.id) }
-                            }
-                            Row(
-                                modifier = Modifier
+                            Box(
+                                Modifier
                                     .fillMaxWidth()
-                                    .height(50.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .border(1.5.dp, colors.line2, RoundedCornerShape(14.dp))
-                                    .clickable { },
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
+                                    .background(colors.card)
+                                    .padding(horizontal = 18.dp, vertical = 14.dp)
+                                    .padding(bottom = 16.dp),
                             ) {
-                                Icon(Icons.Filled.Add, null, tint = Accent, modifier = Modifier.size(18.dp))
-                                Spacer(Modifier.width(8.dp))
-                                Text("Add new card", style = MaterialTheme.typography.labelLarge.copy(color = Accent, fontWeight = FontWeight.Bold))
+                                CallMeetActions(onCall = onCall, onMeet = onMessageOwner)
                             }
                         }
-                        Spacer(Modifier.height(14.dp))
-                    }
-
-                    item {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(4.dp, RoundedCornerShape(18.dp))
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(colors.card)
-                                .padding(18.dp),
-                            verticalArrangement = Arrangement.spacedBy(13.dp),
-                        ) {
-                            SummaryRow("Monthly rent", formatPrice(property.price))
-                            SummaryRow("Service fee", formatPrice(service))
-                            SummaryRow("Security deposit", formatPrice(deposit))
-                            Box(Modifier.fillMaxWidth().height(1.dp).background(colors.line))
-                            SummaryRow("Due today", formatPrice(total), strong = true)
-                        }
-                        Spacer(Modifier.height(16.dp))
                     }
                 }
             }
 
-            if (bookingDone) {
-                Dialog(onDismissRequest = { viewModel.dismissConfirmation(); onBookingConfirmed() }) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                            .background(colors.card)
-                            .padding(horizontal = 24.dp, vertical = 30.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Box(
-                            modifier = Modifier.size(78.dp).clip(CircleShape).background(AccentSoft),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(Icons.Filled.CheckCircle, null, tint = Accent, modifier = Modifier.size(50.dp))
+            if (showDatePicker) {
+                // Earliest selectable = tomorrow (UTC midnight, matching DatePicker's clock).
+                val minSelectableMillis = remember {
+                    LocalDate.now().plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+                }
+                val minSelectableYear = remember { LocalDate.now().year }
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = moveInMillis,
+                    yearRange = minSelectableYear..(minSelectableYear + 5),
+                    selectableDates = object : SelectableDates {
+                        override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis >= minSelectableMillis
+                        override fun isSelectableYear(year: Int) = year >= minSelectableYear
+                    },
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            viewModel.setMoveInDate(datePickerState.selectedDateMillis)
+                            showDatePicker = false
+                        }) { Text("Confirm", color = Accent, fontWeight = FontWeight.Bold) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text("Cancel", color = colors.muted)
                         }
-                        Spacer(Modifier.height(18.dp))
-                        Text("Booking Confirmed!", style = MaterialTheme.typography.headlineMedium.copy(color = colors.ink, fontWeight = FontWeight.ExtraBold))
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "You've booked ${property.title}. The owner has been notified.",
-                            style = MaterialTheme.typography.bodyMedium.copy(color = colors.muted, lineHeight = 22.sp),
-                        )
-                        Spacer(Modifier.height(24.dp))
-                        PrimaryButton("Back to Home", onClick = { viewModel.dismissConfirmation(); onBookingConfirmed() })
-                        Spacer(Modifier.height(12.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp)
-                                .clip(RoundedCornerShape(15.dp))
-                                .background(AccentSoft)
-                                .clickable(onClick = onMessageOwner),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text("Message owner", style = MaterialTheme.typography.titleSmall.copy(color = AccentDeep, fontWeight = FontWeight.Bold, fontSize = 15.sp))
-                        }
-                    }
+                    },
+                ) {
+                    DatePicker(state = datePickerState)
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BookingDetailsSection(
+    selectedYears: Int,
+    moveInLabel: String,
+    durationLabel: String?,
+    onMoveInClick: () -> Unit,
+    onSelectYears: (Int) -> Unit,
+) {
+    val colors = MaterialTheme.appColors
+    Column {
+        Text("Booking details", style = MaterialTheme.typography.titleMedium.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 16.sp))
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            BookingDetailCard(
+                label = "Move-in",
+                value = moveInLabel,
+                icon = Icons.Filled.CalendarMonth,
+                modifier = Modifier.weight(1f).clickable(onClick = onMoveInClick),
+            )
+            val yearLabel = "$selectedYears ${if (selectedYears == 1) "year" else "years"}"
+            BookingDetailCard("Lease term", yearLabel, Icons.Filled.Shield, Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LEASE_YEARS.forEach { years ->
+                val selected = selectedYears == years
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(if (selected) AccentSoft else colors.card)
+                        .border(1.5.dp, if (selected) Accent else colors.line2, RoundedCornerShape(12.dp))
+                        .clickable { onSelectYears(years) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "$years ${if (years == 1) "yr" else "yrs"}",
+                        style = MaterialTheme.typography.labelLarge.copy(color = if (selected) AccentDeep else colors.ink2, fontWeight = FontWeight.Bold),
+                    )
+                }
+            }
+        }
+        if (durationLabel != null) {
+            Spacer(Modifier.height(14.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(AccentSoft)
+                    .padding(horizontal = 13.dp, vertical = 11.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(Icons.Filled.CalendarMonth, null, tint = AccentDeep, modifier = Modifier.size(16.dp))
+                Column {
+                    Text("Total duration", style = MaterialTheme.typography.labelSmall.copy(color = colors.muted, fontWeight = FontWeight.SemiBold))
+                    Text(durationLabel, style = MaterialTheme.typography.titleSmall.copy(color = AccentDeep, fontWeight = FontWeight.Bold, fontSize = 14.sp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DueTodayCard(property: Property, years: Int) {
+    val colors = MaterialTheme.appColors
+    val advance = property.advanceAmount?.toInt() ?: property.price
+    val totalPay = property.price * 12 * years
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(4.dp, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(colors.card)
+            .padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(13.dp),
+    ) {
+        SummaryRow("Advance rent", formatPrice(advance))
+        SummaryRow("Monthly rent", formatPrice(property.price))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(colors.line))
+        SummaryRow("Total pay ($years ${if (years == 1) "yr" else "yrs"})", formatPrice(totalPay), strong = true)
+    }
+}
+
+@Composable
+private fun CallMeetActions(onCall: () -> Unit, onMeet: () -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        SecondaryButton(
+            text = "Call",
+            onClick = onCall,
+            modifier = Modifier.weight(1f),
+            icon = Icons.Filled.Phone,
+        )
+        PrimaryButton(
+            text = "Meet",
+            onClick = onMeet,
+            modifier = Modifier.weight(1f),
+            icon = Icons.AutoMirrored.Filled.Chat,
+        )
     }
 }
 
@@ -289,42 +381,6 @@ private fun BookingDetailCard(label: String, value: String, icon: ImageVector, m
             Text(label, style = MaterialTheme.typography.labelSmall.copy(color = colors.muted, fontWeight = FontWeight.SemiBold))
         }
         Text(value, style = MaterialTheme.typography.titleSmall.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 14.5.sp))
-    }
-}
-
-@Composable
-private fun PaymentMethodRow(method: PaymentMethod, selected: Boolean, onClick: () -> Unit) {
-    val colors = MaterialTheme.appColors
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(15.dp))
-            .background(if (selected) AccentSoft else colors.card)
-            .border(1.5.dp, if (selected) Accent else colors.line2, RoundedCornerShape(15.dp))
-            .clickable(onClick = onClick)
-            .padding(13.dp, 13.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(13.dp),
-    ) {
-        Box(
-            modifier = Modifier.size(42.dp).clip(RoundedCornerShape(11.dp)).background(method.tint),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(method.icon, null, tint = Color.White, modifier = Modifier.size(22.dp))
-        }
-        Column(Modifier.weight(1f)) {
-            Text(method.label, style = MaterialTheme.typography.titleSmall.copy(color = colors.ink, fontWeight = FontWeight.Bold, fontSize = 14.5.sp))
-            Text(method.sub, style = MaterialTheme.typography.bodySmall.copy(color = colors.muted))
-        }
-        Box(
-            modifier = Modifier
-                .size(22.dp)
-                .clip(CircleShape)
-                .border(2.dp, if (selected) Accent else colors.line2, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (selected) Box(Modifier.size(11.dp).clip(CircleShape).background(Accent))
-        }
     }
 }
 
